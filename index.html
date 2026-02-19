@@ -614,6 +614,39 @@ body {
   .quick-actions .btn { width: 100%; justify-content: center; }
 }
 
+/* ===== Department Filter ===== */
+.dept-filters {
+  display: flex; flex-wrap: wrap; gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+.dept-filter {
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-full); font-size: 13px;
+  cursor: pointer; transition: var(--transition);
+  background: #fff; font-family: inherit;
+}
+.dept-filter.active { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+.dept-filter .dept-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 20px; height: 20px; border-radius: var(--radius-full);
+  background: rgba(0,0,0,0.08); font-size: 11px; margin-left: 4px;
+  padding: 0 5px;
+}
+.dept-filter.active .dept-count { background: rgba(255,255,255,0.25); }
+.badge-dept {
+  display: inline-block; padding: 1px 8px;
+  border-radius: var(--radius-sm); font-size: 11px; font-weight: 500;
+}
+.badge-dept-a { background: #dbeafe; color: #1e40af; }
+.badge-dept-b { background: #fef3c7; color: #92400e; }
+.badge-dept-c { background: #d1fae5; color: #065f46; }
+.badge-dept-d { background: #ede9fe; color: #5b21b6; }
+.staff-count-info {
+  font-size: 13px; color: var(--color-on-surface-variant);
+  margin-bottom: var(--space-3);
+}
+
 /* ===== Scrollbar ===== */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -657,13 +690,13 @@ body {
       </div>
       <div class="stat-card">
         <div class="stat-label">今週のシフト</div>
-        <div class="stat-value">12</div>
-        <div class="stat-sub">充足率 85%</div>
+        <div class="stat-value">156</div>
+        <div class="stat-sub">充足率 92%</div>
       </div>
       <div class="stat-card">
         <div class="stat-label">本日の出荷レベル</div>
         <div class="stat-value" style="color: var(--color-warning);">通常</div>
-        <div class="stat-sub">必要スコア: 8</div>
+        <div class="stat-sub">必要スコア: 40</div>
       </div>
     </div>
 
@@ -689,7 +722,7 @@ body {
           <div class="score-bar-fill" id="today-score-bar" style="width: 0; background: var(--color-success);"></div>
         </div>
         <div class="score-info">
-          <span id="today-score-text">スコア: 0 / 8</span>
+          <span id="today-score-text">スコア: 0 / 40</span>
           <span>通常レベル</span>
         </div>
       </div>
@@ -708,6 +741,14 @@ body {
       </button>
     </div>
     <p class="page-subtitle">登録されているスタッフの情報を管理します</p>
+    <div class="dept-filters" id="dept-filters">
+      <button class="dept-filter active" data-dept="all" onclick="filterDept(this)">全て<span class="dept-count" id="count-all"></span></button>
+      <button class="dept-filter" data-dept="出荷・検品" onclick="filterDept(this)">出荷・検品<span class="dept-count" id="count-a"></span></button>
+      <button class="dept-filter" data-dept="入荷・仕分け" onclick="filterDept(this)">入荷・仕分け<span class="dept-count" id="count-b"></span></button>
+      <button class="dept-filter" data-dept="物流・加工" onclick="filterDept(this)">物流・加工<span class="dept-count" id="count-c"></span></button>
+      <button class="dept-filter" data-dept="夜間作業" onclick="filterDept(this)">夜間作業<span class="dept-count" id="count-d"></span></button>
+    </div>
+    <div class="staff-count-info" id="staff-count-info"></div>
     <div class="staff-grid" id="staff-grid"></div>
   </div>
 </div>
@@ -732,6 +773,7 @@ body {
               <div class="slot-toggles" id="slot-toggles">
                 <button class="slot-toggle active" data-slot="早番" onclick="selectSlot(this)">早番</button>
                 <button class="slot-toggle" data-slot="遅番" onclick="selectSlot(this)">遅番</button>
+                <button class="slot-toggle" data-slot="夜勤" onclick="selectSlot(this)">夜勤</button>
                 <button class="slot-toggle" data-slot="通し" onclick="selectSlot(this)">通し</button>
               </div>
             </div>
@@ -740,19 +782,19 @@ body {
               <div class="level-buttons" id="level-buttons">
                 <button class="level-btn" data-level="軽量" onclick="selectLevel(this)">
                   <span class="level-name">軽量</span>
-                  <span class="level-score">必要スコア: 4</span>
+                  <span class="level-score">必要スコア: 20</span>
                 </button>
                 <button class="level-btn active" data-level="通常" onclick="selectLevel(this)">
                   <span class="level-name">通常</span>
-                  <span class="level-score">必要スコア: 8</span>
+                  <span class="level-score">必要スコア: 40</span>
                 </button>
                 <button class="level-btn" data-level="繁忙" onclick="selectLevel(this)">
                   <span class="level-name">繁忙</span>
-                  <span class="level-score">必要スコア: 12</span>
+                  <span class="level-score">必要スコア: 60</span>
                 </button>
                 <button class="level-btn" data-level="超繁忙" onclick="selectLevel(this)">
                   <span class="level-name">超繁忙</span>
-                  <span class="level-score">必要スコア: 16</span>
+                  <span class="level-score">必要スコア: 80</span>
                 </button>
               </div>
             </div>
@@ -760,7 +802,7 @@ body {
             <div class="shift-info-box" id="shift-info-box">
               <div class="shift-info-row">
                 <span>必要スコア</span>
-                <strong id="info-required-score">8</strong>
+                <strong id="info-required-score">40</strong>
               </div>
               <div class="shift-info-row">
                 <span>出勤可能スタッフ</span>
@@ -936,7 +978,16 @@ body {
       <input type="hidden" id="edit-staff-id">
       <div class="form-group">
         <label class="form-label">名前</label>
-        <input type="text" class="form-input" id="edit-name" placeholder="例: 田中太郎">
+        <input type="text" class="form-input" id="edit-name" placeholder="例: 佐藤 浩司">
+      </div>
+      <div class="form-group">
+        <label class="form-label">部署</label>
+        <select class="form-select" id="edit-dept">
+          <option value="出荷・検品">出荷・検品</option>
+          <option value="入荷・仕分け">入荷・仕分け</option>
+          <option value="物流・加工">物流・加工</option>
+          <option value="夜間作業">夜間作業</option>
+        </select>
       </div>
       <div class="form-row">
         <div class="form-group">
@@ -969,6 +1020,7 @@ body {
         <div class="checkbox-group" id="edit-slots">
           <label class="checkbox-item"><input type="checkbox" value="早番"> 早番</label>
           <label class="checkbox-item"><input type="checkbox" value="遅番"> 遅番</label>
+          <label class="checkbox-item"><input type="checkbox" value="夜勤"> 夜勤</label>
           <label class="checkbox-item"><input type="checkbox" value="通し"> 通し</label>
         </div>
       </div>
@@ -987,23 +1039,118 @@ body {
 <div class="screen-label" id="screen-label">DEMO: ダッシュボード</div>
 
 <script>
-/* ===== Sample Data ===== */
-const staffData = [
-  { id:'s1', name:'田中太郎',   skillLevel:4, availableDays:['月','火','水','木','金'], availableSlots:['早番','遅番'], hourlyRate:1100, weight:1.5, note:'フォークリフト資格' },
-  { id:'s2', name:'鈴木花子',   skillLevel:3, availableDays:['月','水','金'],           availableSlots:['早番'],       hourlyRate:1050, weight:1.2, note:'' },
-  { id:'s3', name:'佐藤一郎',   skillLevel:5, availableDays:['火','水','木','金','土'], availableSlots:['早番','遅番','通し'], hourlyRate:1200, weight:2.0, note:'リーダー経験' },
-  { id:'s4', name:'高橋美咲',   skillLevel:2, availableDays:['月','火','木'],           availableSlots:['遅番'],       hourlyRate:1000, weight:0.8, note:'新人（研修中）' },
-  { id:'s5', name:'山本健太',   skillLevel:4, availableDays:['月','火','水','金','土'], availableSlots:['早番','通し'], hourlyRate:1100, weight:1.4, note:'' },
-  { id:'s6', name:'中村さくら', skillLevel:3, availableDays:['水','木','金','土'],       availableSlots:['早番','遅番'], hourlyRate:1050, weight:1.1, note:'土曜優先希望' },
-  { id:'s7', name:'小林大輔',   skillLevel:1, availableDays:['月','火','水'],           availableSlots:['早番'],       hourlyRate:1000, weight:0.5, note:'2月入社・新人' },
-  { id:'s8', name:'渡辺恵子',   skillLevel:4, availableDays:['火','木','土'],           availableSlots:['遅番','通し'], hourlyRate:1150, weight:1.6, note:'検品スペシャリスト' }
+/* ===== Sample Data (85名 — 実データの構造を再現、名前はすべてダミー) ===== */
+// Compact format: [id, name, dept, skill, daysStr, slotsStr, rate, weight, note]
+// dept: A=出荷・検品, B=入荷・仕分け, C=物流・加工, D=夜間作業
+const _raw = [
+  // === A: 出荷・検品（日勤）37名 ===
+  ['a01','佐藤 浩司','A',5,'月火水木金','早遅',1200,2.0,'班長・フォークリフト資格'],
+  ['a02','加藤 隆太','A',2,'土日','早',1000,0.7,'シフト制・不定期'],
+  ['a03','鈴木 真理','A',4,'月火水木金','早',1100,1.4,'週5（土日祝休）'],
+  ['a04','高橋 ナオミ','A',4,'月火水木金','早遅',1100,1.5,'週5（土日休）'],
+  ['a05','伊藤 光男','A',1,'','',1000,0.3,'退職予定'],
+  ['a06','マリア ロサ','A',3,'月火水木金土','早',1050,1.1,'シフト制'],
+  ['a07','中村 亜希','A',3,'月火水木','早',1050,1.2,'週4（金土日祝休）'],
+  ['a08','小林 和子','A',3,'月火水木金','早',1050,1.2,'週5（土日祝休）'],
+  ['a09','松本 幸子','A',2,'月火水土','早',1000,0.9,'扶養内・シフト制'],
+  ['a10','井上 恵美','A',3,'月水金','遅',1050,1.1,'週3（火木土日休）'],
+  ['a11','木村 凛','A',2,'月火水','遅',1000,0.8,'扶養内・シフト制'],
+  ['a12','林 奈美','A',3,'月火木金','早',1050,1.2,'週4（水土日祝休）'],
+  ['a13','清水 修一','A',4,'月火木金','遅',1150,1.5,'週4（水土日休）'],
+  ['a14','阿部 昌也','A',2,'木金','遅',1000,0.7,'週2（月火水土日休）'],
+  ['a15','池田 龍','A',2,'月火水木','遅',1000,0.8,'扶養内・シフト制'],
+  ['a16','橋本 聖月','A',1,'月火水','遅',1000,0.5,'扶養内・シフト制'],
+  ['a17','小川 啓介','A',3,'月火水','遅',1050,1.0,'週3（木金土日休）'],
+  ['a18','岡田 康介','A',2,'','遅',1000,0.7,'シフト制・不定期'],
+  ['a19','後藤 壮太','A',3,'月火木金','遅',1050,1.1,'シフト制'],
+  ['a20','近藤 優梨','A',3,'月火水木金土','早遅',1050,1.2,'シフト制'],
+  ['a21','斎藤 美智代','A',4,'月火水木金','早',1100,1.4,'週5（土日休）'],
+  ['a22','遠藤 房代','A',4,'月火水木金土','早遅',1100,1.5,'シフト制OK'],
+  ['a23','太田 良有','A',4,'月火水金土日','早遅',1100,1.4,'週5（水木休）'],
+  ['a24','三浦 怜美','A',2,'月火木金','早',1000,0.9,'週3-4（土日祝休）'],
+  ['a25','原田 義一','A',4,'月火水木金','早遅',1150,1.6,'週5（土日祝休）'],
+  ['a26','中川 明宣','A',3,'月火水木金','早遅',1050,1.3,'週5（土日祝休）'],
+  ['a27','小野 健太','A',2,'火水木土','早',1000,0.8,'シフト制OK'],
+  ['a28','グエン コンホア','A',3,'水木金','早遅',1050,1.1,'週3（月火土日祝休）'],
+  ['a29','横山 理起','A',3,'月火水木金','早遅',1050,1.3,'週5（土日祝休）'],
+  ['a30','千葉 真希','A',2,'火水木','早',1000,0.9,'週3（月金土日休）'],
+  ['a31','菅原 將浩','A',3,'月木金','遅',1050,1.0,'週3（火水土日休）'],
+  ['a32','市川 秀雄','A',4,'月火水木金土','早遅',1150,1.6,'週5（土日休）'],
+  ['a33','水野 享子','A',3,'月火木金','早',1050,1.2,'週4（水土日祝休）'],
+  ['a34','小松 裕香','A',4,'月火水木金','早遅',1100,1.4,'週5（土日祝休）'],
+  ['a35','岩田 愛','A',3,'月火水木金','早遅',1050,1.3,'週5（土日祝休）'],
+  ['a36','高木 衿香','A',2,'木金','早',1000,0.8,'週4-5（シフト制）'],
+  ['a37','中島 藤子','A',1,'木','早',1000,0.4,'単発'],
+  // === B: 入荷・仕分け（日勤）12名 ===
+  ['b01','大野 貴之','B',5,'月火水木金','早遅',1200,2.0,'リーダー・フォークリフト'],
+  ['b02','河野 絵里香','B',4,'月火水木金土','早遅',1100,1.5,'週5（日月休）'],
+  ['b03','丸山 一希','B',4,'火水木金土','早遅',1100,1.5,'週5（日月休）'],
+  ['b04','内田 智之','B',4,'月火水木金','早遅',1100,1.5,'週5（土日休）'],
+  ['b05','杉山 和恵','B',2,'火水金','早',1000,0.9,'週3（月木土日休）'],
+  ['b06','今井 早希','B',2,'月水木金','早',1000,0.9,'週4（水土日休）'],
+  ['b07','永田 泰葉','B',2,'月水金','早',1000,0.8,'週3（火木土日休）'],
+  ['b08','野口 雅彰','B',4,'月火水木金','早遅',1150,1.6,'週5（土日休）'],
+  ['b09','片山 浩一','B',4,'月火水木金','早遅',1100,1.4,'週5（土日休）'],
+  ['b10','大石 久仁子','B',3,'月水木金土','遅',1050,1.2,'週5（火日休）'],
+  ['b11','柳田 和彦','B',3,'月木金','遅',1050,1.0,'週3（火木土日休）'],
+  ['b12','平野 正和','B',3,'月火水木金','早遅',1050,1.3,'週5（土日休）'],
+  // === C: 物流・加工 23名 ===
+  ['c01','堀内 真司','C',4,'月火水木金土','遅',1150,1.5,'週5（土日休）'],
+  ['c02','日野 雅則','C',4,'月火水木金','早遅',1100,1.5,'週5（金土休）'],
+  ['c03','赤木 茂','C',5,'月水木金土日','早遅',1200,1.8,'週6（火休）'],
+  ['c04','黒田 香','C',3,'月水木日','早',1050,1.1,'週4（火金土休）'],
+  ['c05','白石 涼','C',3,'月水木日','早',1050,1.1,'週4（火金土休）'],
+  ['c06','相田 恵里','C',3,'月水木日','早',1050,1.0,'週4（火金土休）'],
+  ['c07','星野 雪江','C',3,'月水木日','早',1050,1.0,'週4（火金土休）'],
+  ['c08','望月 章人','C',4,'月火水木金','早遅',1100,1.4,'週5（土日休）'],
+  ['c09','宮内 遼太','C',3,'月火水木金土','早',1050,1.2,'週4（月土日休）'],
+  ['c10','手塚 裕貴','C',3,'月水木日','早',1050,1.0,'週4（火金土休）'],
+  ['c11','相沢 照美','C',3,'月火水木','早遅',1050,1.1,'週5（金土休）'],
+  ['c12','吉川 みちよ','C',3,'月火水木','早遅',1050,1.0,'週5（金土休）'],
+  ['c13','野村 健太郎','C',3,'月火木金','早',1050,1.1,'週4（水土日休）'],
+  ['c14','栗原 仁志','C',2,'火土日','早',1000,0.8,'週3'],
+  ['c15','戸田 幸治','C',3,'火水木土','早',1050,1.1,'週3-4（月金土休）'],
+  ['c16','須藤 彩香','C',3,'月火木日','早',1050,1.1,'週4（月水土休）'],
+  ['c17','金子 誠','C',4,'水木金日','早遅',1100,1.4,'水木金（日=月2回）'],
+  ['c18','宇野 篤','C',4,'月火水木金土','早遅',1150,1.6,'週5-6（土休）'],
+  ['c19','矢野 直人','C',3,'月火水木金','早遅',1050,1.3,'週5（土日休）'],
+  ['c20','川村 尚記','C',3,'月火水木','早遅',1050,1.2,'週5（金土休）'],
+  ['c21','植田 昭男','C',3,'月火水木','早遅',1050,1.2,'週5（金土休）'],
+  ['c22','塚本 章賢','C',3,'月火水木','早遅',1050,1.1,'週3-4（金土休）'],
+  ['c23','奥村 知之','C',2,'火木日','早',1000,0.8,'週3（月水金土休）'],
+  // === D: 夜間作業 13名 ===
+  ['d01','柏木 太輔','D',3,'金土','夜',1250,1.1,'週2（金土出勤）'],
+  ['d02','新井 梓','D',4,'月火水木金','夜',1300,1.5,'週5（金土休）'],
+  ['d03','土井 優','D',4,'月火水木金','夜',1300,1.5,'週5（金土休）'],
+  ['d04','梅田 彩','D',3,'月火金木','夜',1250,1.2,'週4（水木土休）・隔週木出勤'],
+  ['d05','栄 裕嗣','D',3,'火木日','夜',1250,1.1,'週3（火木日出勤）'],
+  ['d06','桜井 均','D',2,'','夜',1200,0.6,'不定期'],
+  ['d07','根本 ヒロノブ','D',2,'','夜',1200,0.6,'不定期'],
+  ['d08','梶山 美幸','D',4,'月火水木金','夜',1300,1.5,'週5（土日休）'],
+  ['d09','芦田 都','D',3,'月水木日','夜',1250,1.1,'週4（火金土休）'],
+  ['d10','石橋 豊','D',2,'','夜',1200,0.6,'不定期'],
+  ['d11','真田 秀人','D',4,'月火水木','夜',1300,1.4,'週5（金土休）'],
+  ['d12','福島 弥生','D',3,'月水木日','夜',1250,1.1,'週4（火金土休）'],
+  ['d13','桐山 宏','D',3,'','夜',1250,0.9,'不定期']
 ];
 
+const deptMap = { A:'出荷・検品', B:'入荷・仕分け', C:'物流・加工', D:'夜間作業' };
+const deptClassMap = { '出荷・検品':'badge-dept-a', '入荷・仕分け':'badge-dept-b', '物流・加工':'badge-dept-c', '夜間作業':'badge-dept-d' };
+const slotExpand = { '早':'早番', '遅':'遅番', '夜':'夜勤', '通':'通し' };
+
+const staffData = _raw.map(r => {
+  const days = r[4] ? r[4].split('').reduce((a,c) => { if('月火水木金土日'.includes(c)) a.push(c); return a; }, []) : [];
+  const slots = r[5] ? r[5].split('').reduce((a,c) => { if(slotExpand[c] && !a.includes(slotExpand[c])) a.push(slotExpand[c]); return a; }, []) : [];
+  return { id:r[0], name:r[1], dept:deptMap[r[2]], skillLevel:r[3], availableDays:days, availableSlots:slots, hourlyRate:r[6], weight:r[7], note:r[8] };
+});
+
+let currentDeptFilter = 'all';
+
 const shipmentLevels = {
-  '軽量': { minScore: 4,  desc: '出荷少なめ' },
-  '通常': { minScore: 8,  desc: '平均的な出荷量' },
-  '繁忙': { minScore: 12, desc: '出荷多め' },
-  '超繁忙': { minScore: 16, desc: '最大出荷' }
+  '軽量': { minScore: 20,  desc: '出荷少なめ' },
+  '通常': { minScore: 40,  desc: '平均的な出荷量' },
+  '繁忙': { minScore: 60, desc: '出荷多め' },
+  '超繁忙': { minScore: 80, desc: '最大出荷' }
 };
 
 const dayNames = ['日','月','火','水','木','金','土'];
@@ -1045,15 +1192,40 @@ function renderStars(level) {
   return html + '</span>';
 }
 
+function filterDept(el) {
+  document.querySelectorAll('.dept-filter').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  currentDeptFilter = el.dataset.dept;
+  renderStaffGrid();
+}
+
+function getFilteredStaff() {
+  if (currentDeptFilter === 'all') return staffData;
+  return staffData.filter(s => s.dept === currentDeptFilter);
+}
+
+function updateDeptCounts() {
+  document.getElementById('count-all').textContent = staffData.length;
+  const counts = {};
+  staffData.forEach(s => { counts[s.dept] = (counts[s.dept] || 0) + 1; });
+  document.getElementById('count-a').textContent = counts['出荷・検品'] || 0;
+  document.getElementById('count-b').textContent = counts['入荷・仕分け'] || 0;
+  document.getElementById('count-c').textContent = counts['物流・加工'] || 0;
+  document.getElementById('count-d').textContent = counts['夜間作業'] || 0;
+}
+
 function renderStaffGrid() {
+  const filtered = getFilteredStaff();
   const grid = document.getElementById('staff-grid');
-  grid.innerHTML = staffData.map(s => {
+  document.getElementById('staff-count-info').textContent = '表示: ' + filtered.length + '名 / 全' + staffData.length + '名';
+  grid.innerHTML = filtered.map(s => {
+    const deptClass = deptClassMap[s.dept] || 'badge-dept-a';
     const dayBadges = s.availableDays.map(d => '<span class="badge badge-primary" style="font-size:11px;">' + d + '</span>').join('');
     const slotBadges = s.availableSlots.map(sl => '<span class="badge badge-muted" style="font-size:11px;">' + sl + '</span>').join('');
     return '<div class="staff-card" onclick="openStaffModal(\'' + s.id + '\')">' +
       '<div class="staff-card-header">' +
         '<div class="staff-avatar">' + s.name.charAt(0) + '</div>' +
-        '<div><div class="staff-name">' + s.name + '</div>' +
+        '<div><div class="staff-name">' + s.name + ' <span class="badge-dept ' + deptClass + '">' + s.dept + '</span></div>' +
         '<div class="staff-meta">' + renderStars(s.skillLevel) + ' Lv.' + s.skillLevel + '</div></div>' +
       '</div>' +
       '<div class="staff-badges">' + dayBadges + '</div>' +
@@ -1063,6 +1235,7 @@ function renderStaffGrid() {
     '</div>';
   }).join('');
   document.getElementById('stat-staff').textContent = staffData.length;
+  updateDeptCounts();
 }
 
 /* ===== Staff Modal ===== */
@@ -1074,6 +1247,7 @@ function openStaffModal(id) {
     document.getElementById('modal-title').textContent = 'スタッフ編集';
     document.getElementById('edit-staff-id').value = s.id;
     document.getElementById('edit-name').value = s.name;
+    document.getElementById('edit-dept').value = s.dept || '出荷・検品';
     document.getElementById('edit-skill').value = s.skillLevel;
     document.getElementById('edit-rate').value = s.hourlyRate;
     document.getElementById('edit-weight').value = s.weight;
@@ -1084,6 +1258,7 @@ function openStaffModal(id) {
     document.getElementById('modal-title').textContent = 'スタッフ追加';
     document.getElementById('edit-staff-id').value = '';
     document.getElementById('edit-name').value = '';
+    document.getElementById('edit-dept').value = '出荷・検品';
     document.getElementById('edit-skill').value = 3;
     document.getElementById('edit-rate').value = 1050;
     document.getElementById('edit-weight').value = 1.0;
@@ -1108,6 +1283,7 @@ function saveStaff() {
   document.querySelectorAll('#edit-slots input:checked').forEach(cb => slots.push(cb.value));
   const obj = {
     name: name,
+    dept: document.getElementById('edit-dept').value,
     skillLevel: parseInt(document.getElementById('edit-skill').value) || 3,
     availableDays: days,
     availableSlots: slots,
@@ -1509,16 +1685,20 @@ function changeMonth(delta) {
 /* ===== Dashboard Today Summary ===== */
 function renderTodaySummary() {
   const today = new Date();
+  const minScore = 40; // 通常レベル
   const available = getAvailableStaff(today, '早番');
-  const result = algoEfficiency(available, 8);
+  const result = algoEfficiency(available, minScore);
 
   const list = document.getElementById('today-staff-list');
-  list.innerHTML = result.staff.map(s =>
+  // Show first 10 with a "+N more" if needed
+  const shown = result.staff.slice(0, 10);
+  const remaining = result.staff.length - shown.length;
+  list.innerHTML = shown.map(s =>
     '<span class="today-staff-chip"><span style="font-weight:600;">' + s.name + '</span> Lv.' + s.skillLevel + '</span>'
-  ).join('');
+  ).join('') + (remaining > 0 ? '<span class="today-staff-chip" style="background:var(--color-primary-container);color:var(--color-primary);">+' + remaining + '名</span>' : '');
 
-  const pct = Math.min((result.totalScore / 8) * 100, 100);
-  document.getElementById('today-score-text').textContent = 'スコア: ' + result.totalScore.toFixed(1) + ' / 8';
+  const pct = Math.min((result.totalScore / minScore) * 100, 100);
+  document.getElementById('today-score-text').textContent = 'スコア: ' + result.totalScore.toFixed(1) + ' / ' + minScore + ' (' + result.staff.length + '名配置)';
 
   const statusBadge = document.getElementById('today-status');
   if (result.status === '充足') {
