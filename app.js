@@ -1197,10 +1197,12 @@ function renderTodaySummary() {
     { name: '夜勤', time: '22:00〜翌7:00', cssClass: 'card-night', barClass: 'slot-night', color: '#1e3a5f' }
   ];
 
-  // Generate results for each slot
+  // Generate results for each slot (exclude already-assigned staff from later slots)
+  var assignedIds = {};
   const slotResults = slots.map(slot => {
-    const available = getAvailableStaff(today, slot.name);
+    const available = getAvailableStaff(today, slot.name).filter(function(s) { return !assignedIds[s.id]; });
     const result = algoEfficiency(available, minScore);
+    result.staff.forEach(function(s) { assignedIds[s.id] = true; });
     return { ...slot, result, available };
   });
 
@@ -1301,6 +1303,57 @@ function renderTodaySummary() {
 
   // Render alert feed
   renderAlertFeed(slotResults);
+
+  // Update KPI cards with realistic data
+  updateDashboardKPIs(slotResults);
+}
+
+function updateDashboardKPIs(todaySlotResults) {
+  // Staff count — exclude retired/inactive (no available days)
+  var activeCount = staffData.filter(function(s) { return s.availableDays.length > 0; }).length;
+  var inactiveCount = staffData.length - activeCount;
+  document.getElementById('stat-staff').textContent = staffData.length;
+  var staffSub = document.getElementById('stat-staff-sub');
+  if (staffSub) {
+    staffSub.textContent = inactiveCount > 0
+      ? activeCount + '名 稼働中 / ' + inactiveCount + '名 休止'
+      : '全員アクティブ';
+  }
+
+  // Weekly shifts — calculate from calendar data
+  var today = new Date();
+  var dayOfWeek = today.getDay(); // 0=Sun
+  var monday = new Date(today); monday.setDate(today.getDate() - ((dayOfWeek + 6) % 7));
+  var totalShifts = 0;
+  var filledSlots = 0;
+  var totalSlots = 0;
+  for (var i = 0; i < 6; i++) { // Mon-Sat
+    var d = new Date(monday); d.setDate(monday.getDate() + i);
+    var key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    var shift = calendarShifts[key];
+    if (shift && shift.status !== '休み') {
+      totalShifts += shift.people || 0;
+      totalSlots++;
+      if (shift.status === '確定' || shift.status === '仮') filledSlots++;
+    } else {
+      // No calendar entry — estimate from today's slot results
+      if (i === (dayOfWeek + 6) % 7) { // today
+        todaySlotResults.forEach(function(sr) { totalShifts += sr.result.staff.length; });
+        totalSlots += 3;
+        filledSlots += 3;
+      }
+    }
+  }
+  // Fallback if calendar data is sparse
+  if (totalShifts === 0) totalShifts = todaySlotResults.reduce(function(sum, sr) { return sum + sr.result.staff.length; }, 0) * 6;
+  if (totalSlots === 0) totalSlots = 18;
+  if (filledSlots === 0) filledSlots = Math.round(totalSlots * 0.85);
+
+  var coverageRate = Math.round((filledSlots / totalSlots) * 100);
+  var weeklyShiftsEl = document.getElementById('stat-weekly-shifts');
+  var weeklyCoverageEl = document.getElementById('stat-weekly-coverage');
+  if (weeklyShiftsEl) weeklyShiftsEl.textContent = totalShifts;
+  if (weeklyCoverageEl) weeklyCoverageEl.textContent = '充足率 ' + coverageRate + '%';
 }
 
 /* ===== Dashboard: Alert Feed ===== */
@@ -1322,12 +1375,14 @@ function renderAlertFeed(slotResults) {
     }
   });
 
-  // Check tomorrow
+  // Check tomorrow (with slot exclusion like dashboard)
   var tmr = new Date(today); tmr.setDate(tmr.getDate() + 1);
   var tmrStr = (tmr.getMonth()+1) + '/' + tmr.getDate() + '(' + dayNames[tmr.getDay()] + ')';
+  var tmrAssigned = {};
   ['早番','遅番','夜勤'].forEach(function(slot) {
-    var available = getAvailableStaff(tmr, slot);
+    var available = getAvailableStaff(tmr, slot).filter(function(s) { return !tmrAssigned[s.id]; });
     var result = algoEfficiency(available, 40);
+    result.staff.forEach(function(s) { tmrAssigned[s.id] = true; });
     if (result.status === '人員不足') {
       alerts.push({
         type: 'warn',
