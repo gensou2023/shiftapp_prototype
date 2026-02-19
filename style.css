@@ -389,7 +389,7 @@ body {
 .checkbox-item input { cursor: pointer; }
 
 /* ===== Shift Generator ===== */
-.shift-gen-layout { display: grid; grid-template-columns: 380px 1fr; gap: var(--space-6); }
+.shift-gen-layout { display: grid; grid-template-columns: 380px minmax(0, 1fr); gap: var(--space-6); }
 .shift-input-panel .card { position: sticky; top: 0; }
 .shift-date-input { width: 100%; }
 .slot-toggles { display: flex; gap: var(--space-2); margin-top: var(--space-2); }
@@ -452,7 +452,7 @@ body {
   background: #fff; border: 1px solid var(--border-default);
   border-radius: var(--radius-md); box-shadow: var(--shadow-sm);
   margin-bottom: var(--space-4); overflow: hidden;
-  max-width: 100%;
+  max-width: 100%; min-width: 0;
 }
 .result-card.primary { border-color: var(--color-primary); border-width: 2px; }
 .result-card-header {
@@ -618,6 +618,7 @@ body {
   margin: var(--space-4) 0; padding: var(--space-3) 0;
   border-top: 1px solid var(--border-muted);
   overflow-x: auto; -webkit-overflow-scrolling: touch;
+  max-width: 100%;
 }
 .timeline-inner { min-width: 500px; }
 .timeline-axis {
