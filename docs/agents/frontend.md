@@ -121,6 +121,8 @@ app.js 内 _raw 配列（コンパクトフォーマット）
 
 ## モバイル対応の注意事項
 
+> 詳細なルール集は [`docs/agents/mobile-guidelines.md`](./mobile-guidelines.md) を参照。以下はクイックリファレンス。
+
 ### CSS Grid のモバイル安全パターン
 
 ```css

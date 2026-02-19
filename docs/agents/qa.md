@@ -62,6 +62,8 @@
 
 ### iOS / Android 既知問題
 
+> 詳細なコーディングガイドラインは [`docs/agents/mobile-guidelines.md`](./mobile-guidelines.md) を参照。
+
 ```
 - [ ] iOS Safari: overflow-y:auto + overflow-x:hidden で水平クリッピングが効かない
 - [ ] iOS Safari: input[type="date"] がネイティブ装飾で width:100% を超える
