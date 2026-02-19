@@ -104,14 +104,16 @@
   <div class="page-inner">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--space-2);margin-bottom:var(--space-2);">
       <h1 class="page-title" style="margin-bottom:0;">スタッフ一覧</h1>
-      <button class="btn btn-primary" onclick="openStaffModal()">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-        スタッフ追加
-      </button>
-      <button class="btn btn-secondary" onclick="openCsvModal()">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2M5 6l3-3 3 3M8 3v8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        CSV取込
-      </button>
+      <div style="display:flex;gap:var(--space-2);">
+        <button class="btn btn-primary" onclick="openStaffModal()">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          スタッフ追加
+        </button>
+        <button class="btn btn-secondary" onclick="openCsvModal()">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2M5 6l3-3 3 3M8 3v8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          CSV取込
+        </button>
+      </div>
     </div>
     <p class="page-subtitle">登録されているスタッフの情報を管理します</p>
     <div class="staff-search">
