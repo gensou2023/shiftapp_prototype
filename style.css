@@ -833,6 +833,7 @@ body {
   .today-staff-chip { font-size: 12px; padding: var(--space-1) var(--space-2); }
   .btn-dev-feature { font-size: 12px; padding: 8px 14px; }
   .btn-dev-feature::after { top: -6px; right: -4px; font-size: 8px; padding: 1px 5px; }
+  .level-buttons { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .level-btn { padding: var(--space-2) var(--space-1); }
   .level-btn .level-name { font-size: 13px; }
   .level-btn .level-score { font-size: 11px; }
@@ -844,6 +845,14 @@ body {
   .result-cost div[style*="display:flex"] { flex-wrap: wrap; }
   .btn-generate { font-size: 14px; padding: 12px; }
   .screen-label { display: none; }
+}
+
+@media (max-width: 360px) {
+  .level-buttons { grid-template-columns: 1fr; }
+  .slot-toggles { gap: var(--space-1); }
+  .slot-toggle { padding: var(--space-2) var(--space-3); font-size: 12px; }
+  .page-title { font-size: 18px; }
+  .nav-tab { padding: 14px 6px; font-size: 11px; }
 }
 
 /* ===== Department Filter ===== */
