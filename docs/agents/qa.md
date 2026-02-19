@@ -60,6 +60,17 @@
 - [ ] XSS の可能性がある innerHTML への未サニタイズ入力がないか
 ```
 
+### iOS / Android 既知問題
+
+```
+- [ ] iOS Safari: overflow-y:auto + overflow-x:hidden で水平クリッピングが効かない
+- [ ] iOS Safari: input[type="date"] がネイティブ装飾で width:100% を超える
+- [ ] iOS Safari: 100vh がアドレスバー高さを含む（100dvh を使用）
+- [ ] CSS Grid: 1fr は min-width:auto を暗黙的に持つ（minmax(0,1fr) を使用）
+- [ ] Android: 320px幅の格安端末でもレイアウトが崩れないか
+- [ ] 動的に追加されるDOM要素（生成結果等）のレイアウトを操作後に確認
+```
+
 ### アクセシビリティ
 
 ```
