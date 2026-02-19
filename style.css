@@ -787,13 +787,22 @@ body {
 }
 
 /* ===== Weekly Grid ===== */
-.view-toggle { display: flex; gap: var(--space-2); margin-bottom: var(--space-4); }
-.view-toggle-btn {
-  padding: var(--space-2) var(--space-4); border: 1px solid var(--border-default);
-  border-radius: var(--radius-full); font-size: 13px; cursor: pointer;
-  background: #fff; font-family: inherit; transition: var(--transition);
+.view-toggle {
+  display: inline-flex; gap: var(--space-1); margin-bottom: var(--space-4);
+  background: var(--color-surface-container); border-radius: var(--radius-full);
+  padding: 3px;
 }
-.view-toggle-btn.active { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+.view-toggle-btn {
+  padding: 6px 16px; border: none;
+  border-radius: var(--radius-full); font-size: 13px; cursor: pointer;
+  background: transparent; color: var(--color-on-surface-variant);
+  font-family: inherit; font-weight: 500; transition: var(--transition);
+}
+.view-toggle-btn:hover { color: var(--color-on-surface); }
+.view-toggle-btn.active {
+  background: #fff; color: var(--color-on-surface);
+  box-shadow: var(--shadow-sm);
+}
 .weekly-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--space-3); }
 .weekly-cell {
   background: #fff; border: 1px solid var(--border-default);
