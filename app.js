@@ -580,26 +580,25 @@ function buildTimelineHTML(staffList, slot) {
   '</div>';
 }
 
-/* ===== Dev Popup (Excel等) ===== */
-function showDevPopup() {
-  const overlay = document.createElement('div');
+/* ===== Dev Popup (共通) ===== */
+function showDevPopup(message) {
+  closeDevPopup();
+  var msg = message || 'この機能は現在開発中です。正式版リリース時にご利用可能になります。';
+  var overlay = document.createElement('div');
   overlay.className = 'dev-popup-overlay';
-  const popup = document.createElement('div');
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) closeDevPopup(); });
+  var popup = document.createElement('div');
   popup.className = 'dev-popup';
   popup.innerHTML = '<div style="font-size:36px;margin-bottom:var(--space-3);">&#128679;</div>' +
     '<div style="font-size:16px;font-weight:700;margin-bottom:var(--space-2);">開発中の機能です</div>' +
-    '<div style="font-size:13px;color:var(--color-on-surface-variant);margin-bottom:var(--space-6);">Excel出力機能は現在開発中のため、まだご利用いただけません。本番リリース時にご利用可能になります。</div>' +
+    '<div style="font-size:13px;color:var(--color-on-surface-variant);margin-bottom:var(--space-6);">' + msg + '</div>' +
     '<button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="closeDevPopup()">閉じる</button>';
+  overlay.appendChild(popup);
   document.body.appendChild(overlay);
-  document.body.appendChild(popup);
-  overlay.addEventListener('click', closeDevPopup);
 }
 
 function closeDevPopup() {
-  const overlay = document.querySelector('.dev-popup-overlay');
-  const popup = document.querySelector('.dev-popup');
-  if (overlay) overlay.remove();
-  if (popup) popup.remove();
+  document.querySelectorAll('.dev-popup-overlay').forEach(function(el) { el.remove(); });
 }
 
 function generateShift() {
@@ -1456,25 +1455,7 @@ function goToShiftGenFromCalendar() {
   }
 }
 
-/* ===== Dev Feature Popup (for placeholder features) ===== */
-function showDevPopup() {
-  // Remove existing popup if any
-  var existing = document.querySelector('.dev-popup-overlay');
-  if (existing) existing.remove();
-  var existingPopup = document.querySelector('.dev-popup');
-  if (existingPopup) existingPopup.remove();
-
-  var overlay = document.createElement('div');
-  overlay.className = 'dev-popup-overlay';
-  var popup = document.createElement('div');
-  popup.className = 'dev-popup';
-  popup.innerHTML = '<div style="font-weight:600;margin-bottom:var(--space-3);">開発中の機能</div>' +
-    '<p style="font-size:13px;line-height:1.7;margin-bottom:var(--space-4);">この機能は現在開発中です。正式版では人員不足時に外部求人サービスとの連携や、登録済みスタッフへのシフト打診通知を行えるようになります。</p>' +
-    '<button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="closeDevPopup()">閉じる</button>';
-  document.body.appendChild(overlay);
-  document.body.appendChild(popup);
-  overlay.addEventListener('click', closeDevPopup);
-}
+/* showDevPopup is defined earlier — single unified version */
 
 /* ===== Settings ===== */
 const appSettings = { darkHeader: true, compactMode: false, defaultPage: 'dashboard', notifyShiftChange: true, notifyLaborWarning: true, notifyAbsence: true };
@@ -1513,11 +1494,7 @@ function updateSetting(key, value) {
 
 function handleLogout() {
   closeSettingsModal();
-  const overlay = document.createElement('div'); overlay.className = 'dev-popup-overlay';
-  const popup = document.createElement('div'); popup.className = 'dev-popup';
-  popup.innerHTML = '<div style="font-size:36px;margin-bottom:var(--space-3);">&#128274;</div><div style="font-size:16px;font-weight:700;margin-bottom:var(--space-2);">ログアウト機能</div><div style="font-size:13px;color:var(--color-on-surface-variant);margin-bottom:var(--space-6);">これはデモ環境のため、実際のログアウト処理は行われません。本番環境では認証システムと連携します。</div><button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="closeDevPopup()">閉じる</button>';
-  document.body.appendChild(overlay); document.body.appendChild(popup);
-  overlay.addEventListener('click', closeDevPopup);
+  showDevPopup('これはデモ環境のため、実際のログアウト処理は行われません。本番環境では認証システムと連携します。');
 }
 
 /* ===== CSV Import ===== */
