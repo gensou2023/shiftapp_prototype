@@ -1,0 +1,1569 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShiftOptimizer AI - シフト最適化デモ</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ===== Design Tokens ===== */
+:root {
+  --color-primary: #1a73e8;
+  --color-primary-container: #d2e3fc;
+  --color-on-primary: #ffffff;
+  --color-surface: #fafafa;
+  --color-surface-container: #f0f0f0;
+  --color-on-surface: #1a1a1a;
+  --color-on-surface-variant: #6b6b6b;
+  --color-success: #1a7f37;
+  --color-success-muted: #dafbe1;
+  --color-warning: #9a6700;
+  --color-warning-muted: #fff8c5;
+  --color-danger: #cf222e;
+  --color-danger-muted: #ffebe9;
+  --border-default: #d0d7de;
+  --border-muted: #e8e8e8;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 9999px;
+  --transition: .3s cubic-bezier(.4,0,.2,1);
+}
+
+/* ===== Reset & Base ===== */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Noto Sans JP', 'Inter', sans-serif;
+  background: var(--color-surface);
+  color: var(--color-on-surface);
+  overflow: hidden;
+  height: 100vh;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ===== Navigation ===== */
+.nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  background: #1a1a2e;
+  display: flex; align-items: center;
+  padding: 0 var(--space-6); height: 52px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.nav-brand {
+  font-weight: 700; font-size: 16px; color: #fff;
+  margin-right: var(--space-8); white-space: nowrap;
+  display: flex; align-items: center; gap: var(--space-2);
+}
+.nav-brand svg { flex-shrink: 0; }
+.nav-tabs-container {
+  display: flex; gap: var(--space-1); overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.nav-tab {
+  padding: 14px 16px; color: rgba(255,255,255,0.5);
+  font-size: 13px; font-weight: 500; cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: var(--transition); white-space: nowrap;
+}
+.nav-tab:hover { color: rgba(255,255,255,0.8); }
+.nav-tab.active { color: #fff; border-bottom-color: var(--color-primary); }
+.nav-spacer { flex: 1; }
+.nav-user {
+  display: flex; align-items: center; gap: var(--space-2);
+  color: rgba(255,255,255,0.7); font-size: 13px; white-space: nowrap;
+}
+.nav-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--color-primary);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 13px; font-weight: 600;
+}
+
+/* ===== Page Container ===== */
+.page {
+  display: none; height: calc(100vh - 52px); margin-top: 52px;
+  overflow-y: auto; padding: var(--space-6);
+}
+.page.active { display: block; }
+.page-title { font-size: 24px; font-weight: 700; margin-bottom: var(--space-1); }
+.page-subtitle { font-size: 14px; color: var(--color-on-surface-variant); margin-bottom: var(--space-6); }
+.page-inner { max-width: 1200px; margin: 0 auto; }
+
+/* ===== Cards ===== */
+.card {
+  background: #fff; border: 1px solid var(--border-default);
+  border-radius: var(--radius-md); box-shadow: var(--shadow-sm);
+}
+.card-header {
+  padding: var(--space-4) var(--space-6);
+  border-bottom: 1px solid var(--border-muted);
+  font-weight: 600; font-size: 16px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.card-body { padding: var(--space-6); }
+
+/* ===== Stat Cards ===== */
+.stats-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4); margin-bottom: var(--space-6);
+}
+.stat-card {
+  background: #fff; border: 1px solid var(--border-default);
+  border-radius: var(--radius-md); padding: var(--space-6);
+  box-shadow: var(--shadow-sm);
+}
+.stat-label {
+  font-size: 12px; color: var(--color-on-surface-variant);
+  text-transform: uppercase; letter-spacing: 1px; margin-bottom: var(--space-2);
+}
+.stat-value { font-size: 32px; font-weight: 700; }
+.stat-sub { font-size: 12px; color: var(--color-success); margin-top: var(--space-1); }
+
+/* ===== Badges ===== */
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 2px 10px; border-radius: var(--radius-full);
+  font-size: 12px; font-weight: 500;
+}
+.badge-success { background: var(--color-success-muted); color: var(--color-success); }
+.badge-warning { background: var(--color-warning-muted); color: var(--color-warning); }
+.badge-danger { background: var(--color-danger-muted); color: var(--color-danger); }
+.badge-muted { background: var(--color-surface-container); color: var(--color-on-surface-variant); }
+.badge-primary { background: var(--color-primary-container); color: var(--color-primary); }
+
+/* ===== Buttons ===== */
+.btn {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  padding: 10px 20px; border-radius: var(--radius-md);
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  font-family: inherit; transition: var(--transition); border: none;
+}
+.btn-primary {
+  background: var(--color-primary); color: var(--color-on-primary);
+  box-shadow: var(--shadow-sm);
+}
+.btn-primary:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.btn-secondary {
+  background: #fff; color: var(--color-on-surface);
+  border: 1px solid var(--border-default);
+}
+.btn-secondary:hover { background: var(--color-surface-container); }
+.btn-sm { padding: 6px 14px; font-size: 13px; }
+.btn-lg { padding: 14px 28px; font-size: 16px; }
+
+/* ===== Skill Stars ===== */
+.skill-stars { display: inline-flex; gap: 2px; }
+.skill-star { color: #e0e0e0; font-size: 14px; }
+.skill-star.filled { color: #f4b400; }
+
+/* ===== Quick Actions ===== */
+.quick-actions { display: flex; gap: var(--space-3); margin-bottom: var(--space-6); flex-wrap: wrap; }
+
+/* ===== Dashboard: Today Summary ===== */
+.today-summary {
+  background: #fff; border: 1px solid var(--border-default);
+  border-radius: var(--radius-md); padding: var(--space-6);
+  box-shadow: var(--shadow-sm); margin-bottom: var(--space-6);
+}
+.today-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-4); }
+.today-title { font-size: 16px; font-weight: 600; }
+.today-staff-list { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.today-staff-chip {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface-container);
+  border-radius: var(--radius-full); font-size: 13px;
+}
+.today-score { margin-top: var(--space-4); }
+.score-bar-bg {
+  height: 8px; background: var(--color-surface-container);
+  border-radius: var(--radius-full); overflow: hidden;
+}
+.score-bar-fill {
+  height: 100%; border-radius: var(--radius-full);
+  transition: width 0.8s ease;
+}
+.score-info { display: flex; justify-content: space-between; margin-top: var(--space-1); font-size: 12px; color: var(--color-on-surface-variant); }
+
+/* ===== Staff Grid ===== */
+.staff-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--space-4);
+}
+.staff-card {
+  background: #fff; border: 1px solid var(--border-default);
+  border-radius: var(--radius-md); padding: var(--space-6);
+  box-shadow: var(--shadow-sm); transition: var(--transition);
+  cursor: pointer;
+}
+.staff-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.staff-card-header { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-3); }
+.staff-avatar {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: var(--color-primary-container); color: var(--color-primary);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 16px; flex-shrink: 0;
+}
+.staff-name { font-weight: 600; font-size: 15px; }
+.staff-meta { font-size: 12px; color: var(--color-on-surface-variant); }
+.staff-badges { display: flex; flex-wrap: wrap; gap: var(--space-1); margin-bottom: var(--space-2); }
+.staff-note { font-size: 12px; color: var(--color-on-surface-variant); margin-top: var(--space-2); padding-top: var(--space-2); border-top: 1px solid var(--border-muted); }
+.staff-rate { font-size: 13px; font-weight: 600; margin-top: var(--space-2); }
+
+/* ===== Modal ===== */
+.modal-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5); z-index: 200;
+  display: none; align-items: center; justify-content: center;
+  padding: var(--space-4);
+}
+.modal-overlay.active { display: flex; }
+.modal {
+  background: #fff; border-radius: var(--radius-lg);
+  width: 100%; max-width: 500px; max-height: 90vh;
+  overflow-y: auto; box-shadow: var(--shadow-lg);
+  animation: modalIn 0.3s ease;
+}
+@keyframes modalIn { from { opacity: 0; transform: scale(0.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+.modal-header {
+  padding: var(--space-6); border-bottom: 1px solid var(--border-muted);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.modal-title { font-size: 18px; font-weight: 700; }
+.modal-close {
+  width: 32px; height: 32px; border: none; background: var(--color-surface-container);
+  border-radius: 50%; cursor: pointer; font-size: 18px;
+  display: flex; align-items: center; justify-content: center;
+}
+.modal-body { padding: var(--space-6); }
+.modal-footer {
+  padding: var(--space-4) var(--space-6);
+  border-top: 1px solid var(--border-muted);
+  display: flex; justify-content: flex-end; gap: var(--space-2);
+}
+.form-group { margin-bottom: var(--space-4); }
+.form-label { display: block; font-size: 13px; font-weight: 600; margin-bottom: var(--space-1); }
+.form-input, .form-select {
+  width: 100%; padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border-default); border-radius: var(--radius-sm);
+  font-size: 14px; font-family: inherit;
+  transition: var(--transition);
+}
+.form-input:focus, .form-select:focus {
+  outline: none; border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(26,115,232,0.15);
+}
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+.checkbox-group { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.checkbox-item {
+  display: flex; align-items: center; gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  background: var(--color-surface-container);
+  border-radius: var(--radius-sm); font-size: 13px; cursor: pointer;
+}
+.checkbox-item input { cursor: pointer; }
+
+/* ===== Shift Generator ===== */
+.shift-gen-layout { display: grid; grid-template-columns: 380px 1fr; gap: var(--space-6); }
+.shift-input-panel .card { position: sticky; top: 0; }
+.shift-date-input { width: 100%; }
+.slot-toggles { display: flex; gap: var(--space-2); margin-top: var(--space-2); }
+.slot-toggle {
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-full); font-size: 13px;
+  cursor: pointer; transition: var(--transition);
+  background: #fff; font-family: inherit;
+}
+.slot-toggle.active {
+  background: var(--color-primary); color: #fff;
+  border-color: var(--color-primary);
+}
+.level-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); margin-top: var(--space-2); }
+.level-btn {
+  padding: var(--space-3) var(--space-4);
+  border: 2px solid var(--border-default);
+  border-radius: var(--radius-md); text-align: center;
+  cursor: pointer; transition: var(--transition);
+  background: #fff; font-family: inherit;
+}
+.level-btn:hover { border-color: var(--color-primary); }
+.level-btn.active { border-color: var(--color-primary); background: var(--color-primary-container); }
+.level-btn .level-name { font-weight: 600; font-size: 15px; display: block; }
+.level-btn .level-score { font-size: 12px; color: var(--color-on-surface-variant); }
+.shift-info-box {
+  margin-top: var(--space-4); padding: var(--space-4);
+  background: var(--color-surface-container); border-radius: var(--radius-md);
+  font-size: 13px;
+}
+.shift-info-row { display: flex; justify-content: space-between; margin-bottom: var(--space-1); }
+.shift-info-row:last-child { margin-bottom: 0; }
+.btn-generate {
+  width: 100%; margin-top: var(--space-4);
+  padding: 14px; font-size: 16px; position: relative; overflow: hidden;
+}
+.btn-generate .pulse {
+  position: absolute; top: 50%; left: 50%;
+  width: 200%; height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.3), transparent 60%);
+  transform: translate(-50%, -50%) scale(0);
+  border-radius: 50%;
+}
+.btn-generate.animating .pulse {
+  animation: pulseAnim 0.6s ease-out;
+}
+@keyframes pulseAnim { to { transform: translate(-50%, -50%) scale(1); opacity: 0; } }
+
+/* ===== Shift Results ===== */
+.shift-results { min-height: 200px; }
+.result-placeholder {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 60px var(--space-6); text-align: center;
+  color: var(--color-on-surface-variant);
+}
+.result-placeholder-icon { font-size: 48px; margin-bottom: var(--space-4); opacity: 0.5; }
+.result-card {
+  background: #fff; border: 1px solid var(--border-default);
+  border-radius: var(--radius-md); box-shadow: var(--shadow-sm);
+  margin-bottom: var(--space-4); overflow: hidden;
+}
+.result-card.primary { border-color: var(--color-primary); border-width: 2px; }
+.result-card-header {
+  padding: var(--space-4) var(--space-6);
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--border-muted);
+}
+.result-card-title { font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: var(--space-2); }
+.result-card-body { padding: var(--space-6); }
+.result-score-section { margin-bottom: var(--space-4); }
+.score-gauge-bg {
+  height: 12px; background: var(--color-surface-container);
+  border-radius: var(--radius-full); overflow: hidden; position: relative;
+}
+.score-gauge-fill {
+  height: 100%; border-radius: var(--radius-full);
+  width: 0; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.score-gauge-target {
+  position: absolute; top: -4px; bottom: -4px; width: 2px;
+  background: var(--color-on-surface); opacity: 0.3;
+}
+.result-staff-grid {
+  display: flex; flex-wrap: wrap; gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+.result-staff-chip {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface-container);
+  border-radius: var(--radius-md); font-size: 13px;
+  opacity: 0; transform: translateY(10px);
+  transition: all 0.3s ease;
+}
+.result-staff-chip.visible { opacity: 1; transform: translateY(0); }
+.result-staff-chip .chip-avatar {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--color-primary-container); color: var(--color-primary);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600;
+}
+.result-cost {
+  font-size: 13px; color: var(--color-on-surface-variant);
+  padding-top: var(--space-3); border-top: 1px solid var(--border-muted);
+}
+.result-cost strong { color: var(--color-on-surface); font-size: 16px; }
+.status-pop {
+  opacity: 0; transform: scale(0.5);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.status-pop.visible { opacity: 1; transform: scale(1); }
+
+/* Alternative Results Accordion */
+.alt-results { margin-top: var(--space-4); }
+.alt-toggle {
+  width: 100%; padding: var(--space-3) var(--space-4);
+  background: var(--color-surface-container); border: 1px solid var(--border-muted);
+  border-radius: var(--radius-md); cursor: pointer; font-family: inherit;
+  font-size: 14px; font-weight: 500;
+  display: flex; align-items: center; justify-content: space-between;
+  transition: var(--transition);
+}
+.alt-toggle:hover { background: var(--border-muted); }
+.alt-toggle .arrow { transition: transform 0.3s; }
+.alt-toggle.open .arrow { transform: rotate(180deg); }
+.alt-content {
+  max-height: 0; overflow: hidden;
+  transition: max-height 0.4s ease;
+}
+.alt-content.open { max-height: 2000px; }
+
+/* Analyzing overlay */
+.analyzing-overlay {
+  display: none; align-items: center; justify-content: center;
+  flex-direction: column; gap: var(--space-4);
+  padding: 40px; text-align: center;
+}
+.analyzing-overlay.active { display: flex; }
+.analyzing-spinner {
+  width: 40px; height: 40px;
+  border: 3px solid var(--color-surface-container);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ===== Calendar ===== */
+.calendar-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: var(--space-4);
+}
+.calendar-nav { display: flex; align-items: center; gap: var(--space-3); }
+.calendar-nav-btn {
+  width: 36px; height: 36px; border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm); background: #fff; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: var(--transition); font-size: 16px;
+}
+.calendar-nav-btn:hover { background: var(--color-surface-container); }
+.calendar-month { font-size: 20px; font-weight: 700; }
+.calendar-grid-wrapper {
+  background: #fff; border: 1px solid var(--border-default);
+  border-radius: var(--radius-md); overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.calendar-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr);
+}
+.calendar-day-header {
+  padding: var(--space-3); text-align: center;
+  font-size: 12px; font-weight: 600; color: var(--color-on-surface-variant);
+  background: var(--color-surface-container);
+  border-bottom: 1px solid var(--border-muted);
+}
+.calendar-day {
+  min-height: 90px; padding: var(--space-2);
+  border-bottom: 1px solid var(--border-muted);
+  border-right: 1px solid var(--border-muted);
+  cursor: pointer; transition: var(--transition);
+  position: relative;
+}
+.calendar-day:nth-child(7n) { border-right: none; }
+.calendar-day:hover { background: rgba(26,115,232,0.04); }
+.calendar-day.other-month { background: var(--color-surface-container); opacity: 0.5; }
+.calendar-day.today { background: rgba(26,115,232,0.06); }
+.calendar-day-num { font-size: 13px; font-weight: 600; margin-bottom: var(--space-1); }
+.calendar-day-status {
+  font-size: 10px; padding: 2px 6px;
+  border-radius: var(--radius-sm); display: inline-block;
+}
+.cal-ok { background: var(--color-success-muted); color: var(--color-success); }
+.cal-warn { background: var(--color-warning-muted); color: var(--color-warning); }
+.cal-danger { background: var(--color-danger-muted); color: var(--color-danger); }
+.cal-off { background: var(--color-surface-container); color: var(--color-on-surface-variant); }
+.calendar-day-people { font-size: 11px; color: var(--color-on-surface-variant); margin-top: 2px; }
+
+/* Calendar Detail Panel */
+.calendar-detail {
+  display: none; margin-top: var(--space-4);
+}
+.calendar-detail.active { display: block; }
+
+/* Calendar Mobile List */
+.calendar-list { display: none; }
+.calendar-list-item {
+  background: #fff; border: 1px solid var(--border-default);
+  border-radius: var(--radius-md); padding: var(--space-4);
+  margin-bottom: var(--space-2); cursor: pointer;
+  display: flex; align-items: center; gap: var(--space-4);
+  transition: var(--transition);
+}
+.calendar-list-item:hover { box-shadow: var(--shadow-sm); }
+.calendar-list-date {
+  text-align: center; min-width: 50px;
+}
+.calendar-list-date .day-num { font-size: 22px; font-weight: 700; }
+.calendar-list-date .day-name { font-size: 11px; color: var(--color-on-surface-variant); }
+.calendar-list-info { flex: 1; }
+
+/* ===== Plans ===== */
+.plans-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-6); margin-bottom: var(--space-8);
+}
+.plan-card {
+  background: #fff; border: 2px solid var(--border-default);
+  border-radius: var(--radius-lg); padding: var(--space-8) var(--space-6);
+  position: relative; transition: var(--transition); text-align: center;
+}
+.plan-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.plan-card.highlight {
+  border-color: var(--color-primary); box-shadow: var(--shadow-md);
+  transform: scale(1.03);
+}
+.plan-card.highlight:hover { transform: scale(1.05); }
+.plan-badge-top {
+  position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+  padding: var(--space-1) var(--space-4); border-radius: var(--radius-full);
+  font-size: 12px; font-weight: 600; white-space: nowrap;
+}
+.plan-badge-recommend { background: var(--color-primary); color: #fff; }
+.plan-badge-demo { background: var(--color-success); color: #fff; }
+.plan-icon { font-size: 40px; margin-bottom: var(--space-3); }
+.plan-name { font-size: 22px; font-weight: 700; margin-bottom: var(--space-1); }
+.plan-subtitle { font-size: 13px; color: var(--color-on-surface-variant); margin-bottom: var(--space-4); }
+.plan-features { text-align: left; margin-bottom: var(--space-6); }
+.plan-feature {
+  padding: var(--space-2) 0; font-size: 14px;
+  display: flex; align-items: flex-start; gap: var(--space-2);
+  border-bottom: 1px solid var(--border-muted);
+}
+.plan-feature:last-child { border-bottom: none; }
+.plan-check { flex-shrink: 0; font-size: 14px; }
+.plan-check.yes { color: var(--color-success); }
+.plan-check.no { color: var(--color-on-surface-variant); opacity: 0.4; }
+
+/* Plan Comparison Table */
+.plan-compare {
+  margin-bottom: var(--space-8);
+}
+.plan-compare table {
+  width: 100%; border-collapse: collapse;
+  background: #fff; border-radius: var(--radius-md);
+  overflow: hidden; box-shadow: var(--shadow-sm);
+}
+.plan-compare th, .plan-compare td {
+  padding: var(--space-3) var(--space-4);
+  text-align: center; border-bottom: 1px solid var(--border-muted);
+  font-size: 14px;
+}
+.plan-compare th { background: var(--color-surface-container); font-weight: 600; }
+.plan-compare td:first-child { text-align: left; font-weight: 500; }
+.plan-compare .highlight-col { background: rgba(26,115,232,0.04); }
+
+/* Step Flow */
+.step-flow {
+  display: flex; align-items: center; justify-content: center;
+  gap: var(--space-4); flex-wrap: wrap;
+}
+.step-item {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-4) var(--space-6);
+  background: #fff; border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  font-size: 14px;
+}
+.step-num {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--color-primary); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; flex-shrink: 0;
+}
+.step-arrow { color: var(--color-on-surface-variant); font-size: 20px; }
+
+/* ===== Screen Label ===== */
+.screen-label {
+  position: fixed; bottom: 16px; left: 16px;
+  padding: 6px 14px; background: #1a1a2e;
+  color: var(--color-primary-container); font-size: 11px;
+  font-weight: 600; border-radius: var(--radius-full);
+  z-index: 200; box-shadow: var(--shadow-md);
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 1024px) {
+  .shift-gen-layout { grid-template-columns: 1fr; }
+  .plans-grid { grid-template-columns: 1fr; max-width: 400px; margin-left: auto; margin-right: auto; }
+  .plan-card.highlight { transform: none; }
+  .plan-card.highlight:hover { transform: translateY(-2px); }
+}
+
+@media (max-width: 768px) {
+  .nav { padding: 0 var(--space-3); }
+  .nav-brand { margin-right: var(--space-3); font-size: 14px; }
+  .nav-tab { padding: 14px 10px; font-size: 12px; }
+  .nav-user { display: none; }
+  .page { padding: var(--space-4); }
+  .stats-grid { grid-template-columns: 1fr; }
+  .stat-card { padding: var(--space-4); }
+  .stat-value { font-size: 24px; }
+  .staff-grid { grid-template-columns: 1fr; }
+  .calendar-grid-wrapper { display: none; }
+  .calendar-list { display: block; }
+  .step-flow { flex-direction: column; }
+  .step-arrow { transform: rotate(90deg); }
+  .form-row { grid-template-columns: 1fr; }
+  .plan-compare { overflow-x: auto; }
+}
+
+@media (max-width: 480px) {
+  .nav-brand span { display: none; }
+  .page-title { font-size: 20px; }
+  .modal { border-radius: 0; max-width: 100%; max-height: 100%; height: 100%; }
+  .quick-actions { flex-direction: column; }
+  .quick-actions .btn { width: 100%; justify-content: center; }
+}
+
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-default); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-on-surface-variant); }
+</style>
+</head>
+<body>
+
+<!-- ===== Navigation ===== -->
+<nav class="nav">
+  <div class="nav-brand">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+      <rect x="3" y="3" width="18" height="18" rx="4" stroke="#5b9aff" stroke-width="2"/>
+      <path d="M7 12h10M7 8h6M7 16h8" stroke="#5b9aff" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    <span>ShiftOptimizer AI</span>
+  </div>
+  <div class="nav-tabs-container">
+    <div class="nav-tab active" data-page="dashboard">ダッシュボード</div>
+    <div class="nav-tab" data-page="staff">スタッフ一覧</div>
+    <div class="nav-tab" data-page="generate">シフト生成</div>
+    <div class="nav-tab" data-page="calendar">カレンダー</div>
+    <div class="nav-tab" data-page="plans">プラン提示</div>
+  </div>
+  <div class="nav-spacer"></div>
+  <div class="nav-user"><div class="nav-avatar">置</div>クライアント</div>
+</nav>
+
+<!-- ===== Dashboard ===== -->
+<div class="page active" id="page-dashboard">
+  <div class="page-inner">
+    <h1 class="page-title">ダッシュボード</h1>
+    <p class="page-subtitle">シフト管理の概要</p>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">登録スタッフ</div>
+        <div class="stat-value" id="stat-staff">8</div>
+        <div class="stat-sub">全員アクティブ</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">今週のシフト</div>
+        <div class="stat-value">12</div>
+        <div class="stat-sub">充足率 85%</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">本日の出荷レベル</div>
+        <div class="stat-value" style="color: var(--color-warning);">通常</div>
+        <div class="stat-sub">必要スコア: 8</div>
+      </div>
+    </div>
+
+    <div class="quick-actions">
+      <button class="btn btn-primary btn-lg" onclick="switchPage('generate')">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 3v12M3 9h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        AIでシフトを生成
+      </button>
+      <button class="btn btn-secondary btn-lg" onclick="switchPage('staff')">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="6" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M3 16c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" stroke-width="1.5"/></svg>
+        スタッフ一覧
+      </button>
+    </div>
+
+    <div class="today-summary">
+      <div class="today-header">
+        <div class="today-title">本日のシフトサマリー（早番）</div>
+        <span class="badge badge-success" id="today-status">充足</span>
+      </div>
+      <div class="today-staff-list" id="today-staff-list"></div>
+      <div class="today-score">
+        <div class="score-bar-bg">
+          <div class="score-bar-fill" id="today-score-bar" style="width: 0; background: var(--color-success);"></div>
+        </div>
+        <div class="score-info">
+          <span id="today-score-text">スコア: 0 / 8</span>
+          <span>通常レベル</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Staff List ===== -->
+<div class="page" id="page-staff">
+  <div class="page-inner">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--space-2);margin-bottom:var(--space-2);">
+      <h1 class="page-title" style="margin-bottom:0;">スタッフ一覧</h1>
+      <button class="btn btn-primary" onclick="openStaffModal()">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        スタッフ追加
+      </button>
+    </div>
+    <p class="page-subtitle">登録されているスタッフの情報を管理します</p>
+    <div class="staff-grid" id="staff-grid"></div>
+  </div>
+</div>
+
+<!-- ===== Shift Generator ===== -->
+<div class="page" id="page-generate">
+  <div class="page-inner">
+    <h1 class="page-title">AIシフト生成</h1>
+    <p class="page-subtitle">出荷量に応じた最適なシフトをAIが自動生成します</p>
+
+    <div class="shift-gen-layout">
+      <div class="shift-input-panel">
+        <div class="card">
+          <div class="card-header">入力条件</div>
+          <div class="card-body">
+            <div class="form-group">
+              <label class="form-label">日付</label>
+              <input type="date" class="form-input shift-date-input" id="shift-date">
+            </div>
+            <div class="form-group">
+              <label class="form-label">時間帯</label>
+              <div class="slot-toggles" id="slot-toggles">
+                <button class="slot-toggle active" data-slot="早番" onclick="selectSlot(this)">早番</button>
+                <button class="slot-toggle" data-slot="遅番" onclick="selectSlot(this)">遅番</button>
+                <button class="slot-toggle" data-slot="通し" onclick="selectSlot(this)">通し</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">出荷量レベル</label>
+              <div class="level-buttons" id="level-buttons">
+                <button class="level-btn" data-level="軽量" onclick="selectLevel(this)">
+                  <span class="level-name">軽量</span>
+                  <span class="level-score">必要スコア: 4</span>
+                </button>
+                <button class="level-btn active" data-level="通常" onclick="selectLevel(this)">
+                  <span class="level-name">通常</span>
+                  <span class="level-score">必要スコア: 8</span>
+                </button>
+                <button class="level-btn" data-level="繁忙" onclick="selectLevel(this)">
+                  <span class="level-name">繁忙</span>
+                  <span class="level-score">必要スコア: 12</span>
+                </button>
+                <button class="level-btn" data-level="超繁忙" onclick="selectLevel(this)">
+                  <span class="level-name">超繁忙</span>
+                  <span class="level-score">必要スコア: 16</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="shift-info-box" id="shift-info-box">
+              <div class="shift-info-row">
+                <span>必要スコア</span>
+                <strong id="info-required-score">8</strong>
+              </div>
+              <div class="shift-info-row">
+                <span>出勤可能スタッフ</span>
+                <strong id="info-available-count">-</strong>
+              </div>
+            </div>
+
+            <button class="btn btn-primary btn-generate" id="btn-generate" onclick="generateShift()">
+              <span class="pulse"></span>
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2l2.1 4.3 4.7.7-3.4 3.3.8 4.7L9 12.8 4.8 15l.8-4.7L2.2 7l4.7-.7L9 2z" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+              AIでシフト生成
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="shift-results" id="shift-results">
+        <div class="result-placeholder">
+          <div class="result-placeholder-icon">&#128197;</div>
+          <div style="font-size:16px;font-weight:600;margin-bottom:var(--space-2);">シフトを生成してください</div>
+          <div>左の条件を設定し「AIでシフト生成」ボタンをクリック</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Calendar ===== -->
+<div class="page" id="page-calendar">
+  <div class="page-inner">
+    <h1 class="page-title">シフトカレンダー</h1>
+    <p class="page-subtitle">月間のシフト状況を一覧できます</p>
+
+    <div class="calendar-header">
+      <div class="calendar-nav">
+        <button class="calendar-nav-btn" onclick="changeMonth(-1)">&lt;</button>
+        <span class="calendar-month" id="calendar-month"></span>
+        <button class="calendar-nav-btn" onclick="changeMonth(1)">&gt;</button>
+      </div>
+      <div>
+        <span class="badge badge-success" style="margin-right:4px;">充足</span>
+        <span class="badge badge-warning" style="margin-right:4px;">不足気味</span>
+        <span class="badge badge-danger" style="margin-right:4px;">人員不足</span>
+        <span class="badge badge-muted">休み</span>
+      </div>
+    </div>
+
+    <div class="calendar-grid-wrapper">
+      <div class="calendar-grid" id="calendar-grid"></div>
+    </div>
+
+    <div class="calendar-list" id="calendar-list"></div>
+
+    <div class="calendar-detail" id="calendar-detail">
+      <div class="card">
+        <div class="card-header">
+          <span id="detail-date">-</span>
+          <button class="btn btn-sm btn-secondary" onclick="document.getElementById('calendar-detail').classList.remove('active')">閉じる</button>
+        </div>
+        <div class="card-body" id="detail-body"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Plans ===== -->
+<div class="page" id="page-plans">
+  <div class="page-inner">
+    <h1 class="page-title" style="text-align:center;">導入プラン</h1>
+    <p class="page-subtitle" style="text-align:center;">ご予算と規模に応じて最適なプランをお選びいただけます</p>
+
+    <div class="plans-grid">
+      <!-- Ume -->
+      <div class="plan-card">
+        <div class="plan-icon">&#127807;</div>
+        <div class="plan-name">梅プラン</div>
+        <div class="plan-subtitle">エージェント型（ローコスト）</div>
+        <div class="plan-features">
+          <div class="plan-feature"><span class="plan-check yes">&#10003;</span> スタッフ管理（スプレッドシート）</div>
+          <div class="plan-feature"><span class="plan-check yes">&#10003;</span> 基本シフト自動生成</div>
+          <div class="plan-feature"><span class="plan-check no">&#10005;</span> カレンダー表示</div>
+          <div class="plan-feature"><span class="plan-check no">&#10005;</span> 過去データ学習</div>
+          <div class="plan-feature"><span class="plan-check yes">&#10003;</span> Excel出力</div>
+          <div class="plan-feature"><span class="plan-check no">&#10005;</span> 予測・レポート</div>
+        </div>
+        <div style="font-size:13px;color:var(--color-on-surface-variant);margin-bottom:var(--space-3);">初期コスト: 低 ／ 月額: ほぼ0円</div>
+        <button class="btn btn-secondary" style="width:100%;justify-content:center;">詳細を見る</button>
+      </div>
+
+      <!-- Take -->
+      <div class="plan-card highlight">
+        <div class="plan-badge-top plan-badge-demo">このデモの本番版</div>
+        <div class="plan-icon">&#127812;</div>
+        <div class="plan-name">竹プラン</div>
+        <div class="plan-subtitle">Webアプリ基本版</div>
+        <div class="plan-features">
+          <div class="plan-feature"><span class="plan-check yes">&#10003;</span> スタッフ管理（専用UI）</div>
+          <div class="plan-feature"><span class="plan-check yes">&#10003;</span> シフト自動生成</div>
+          <div class="plan-feature"><span class="plan-check yes">&#10003;</span> カレンダー表示</div>
+          <div class="plan-feature"><span class="plan-check no">&#10005;</span> 過去データ学習</div>
+          <div class="plan-feature"><span class="plan-check yes">&#10003;</span> Excel出力</div>
+          <div class="plan-feature"><span class="plan-check no">&#10005;</span> 予測・レポート</div>
+        </div>
+        <div style="font-size:13px;color:var(--color-on-surface-variant);margin-bottom:var(--space-3);">初期コスト: 中 ／ 月額: 低</div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;">お問い合わせ</button>
+      </div>
+
+      <!-- Matsu -->
+      <div class="plan-card">
+        <div class="plan-badge-top plan-badge-recommend">おすすめ</div>
+        <div class="plan-icon">&#127795;</div>
+        <div class="plan-name">松プラン</div>
+        <div class="plan-subtitle">AI学習型フル機能版</div>
+        <div class="plan-features">
+          <div class="plan-feature"><span class="plan-check yes">&#10003;</span> スタッフ管理（専用UI）</div>
+          <div class="plan-feature"><span class="plan-check yes">&#10003;</span> 高度なシフト最適化</div>
+          <div class="plan-feature"><span class="plan-check yes">&#10003;</span> カレンダー表示</div>
+          <div class="plan-feature"><span class="plan-check yes">&#10003;</span> 過去データ学習</div>
+          <div class="plan-feature"><span class="plan-check yes">&#10003;</span> Excel出力</div>
+          <div class="plan-feature"><span class="plan-check yes">&#10003;</span> 予測・レポート・権限管理</div>
+        </div>
+        <div style="font-size:13px;color:var(--color-on-surface-variant);margin-bottom:var(--space-3);">初期コスト: 高 ／ 月額: 中</div>
+        <button class="btn btn-secondary" style="width:100%;justify-content:center;">詳細を見る</button>
+      </div>
+    </div>
+
+    <!-- Comparison Table -->
+    <div class="plan-compare">
+      <h2 style="font-size:18px;font-weight:700;margin-bottom:var(--space-4);text-align:center;">機能比較表</h2>
+      <table>
+        <thead>
+          <tr>
+            <th style="text-align:left;">機能</th>
+            <th>梅</th>
+            <th class="highlight-col">竹</th>
+            <th>松</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>スタッフ管理</td><td>&#9651;</td><td class="highlight-col">&#9675;</td><td>&#9675;</td></tr>
+          <tr><td>シフト自動生成</td><td>&#9675;</td><td class="highlight-col">&#9675;</td><td>&#9675;（高度）</td></tr>
+          <tr><td>カレンダー表示</td><td>&#10005;</td><td class="highlight-col">&#9675;</td><td>&#9675;</td></tr>
+          <tr><td>スマホ対応</td><td>&#9651;</td><td class="highlight-col">&#9675;</td><td>&#9675;</td></tr>
+          <tr><td>Excel出力</td><td>&#9675;</td><td class="highlight-col">&#9675;</td><td>&#9675;</td></tr>
+          <tr><td>過去データ学習</td><td>&#10005;</td><td class="highlight-col">&#10005;</td><td>&#9675;</td></tr>
+          <tr><td>制約条件最適化</td><td>&#10005;</td><td class="highlight-col">&#9651;</td><td>&#9675;</td></tr>
+          <tr><td>予測・レポート</td><td>&#10005;</td><td class="highlight-col">&#10005;</td><td>&#9675;</td></tr>
+          <tr><td>権限管理</td><td>&#10005;</td><td class="highlight-col">&#10005;</td><td>&#9675;</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Step Flow -->
+    <h2 style="font-size:18px;font-weight:700;margin-bottom:var(--space-4);text-align:center;">おすすめの導入ステップ</h2>
+    <div class="step-flow">
+      <div class="step-item"><div class="step-num">1</div><div><strong>梅で検証</strong><br><span style="font-size:12px;color:var(--color-on-surface-variant);">業務フローを確認（1-2週間）</span></div></div>
+      <div class="step-arrow">&#8594;</div>
+      <div class="step-item"><div class="step-num">2</div><div><strong>竹でUI整備</strong><br><span style="font-size:12px;color:var(--color-on-surface-variant);">専用Webアプリ化</span></div></div>
+      <div class="step-arrow">&#8594;</div>
+      <div class="step-item"><div class="step-num">3</div><div><strong>松で本格運用</strong><br><span style="font-size:12px;color:var(--color-on-surface-variant);">AI学習・全機能展開</span></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Staff Edit Modal ===== -->
+<div class="modal-overlay" id="staff-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">スタッフ追加</div>
+      <button class="modal-close" onclick="closeStaffModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-staff-id">
+      <div class="form-group">
+        <label class="form-label">名前</label>
+        <input type="text" class="form-input" id="edit-name" placeholder="例: 田中太郎">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">スキルレベル（1-5）</label>
+          <input type="number" class="form-input" id="edit-skill" min="1" max="5" value="3">
+        </div>
+        <div class="form-group">
+          <label class="form-label">時給（円）</label>
+          <input type="number" class="form-input" id="edit-rate" value="1050" step="50">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">重み（0.5-2.0）</label>
+        <input type="number" class="form-input" id="edit-weight" min="0.5" max="2.0" step="0.1" value="1.0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">出勤可能曜日</label>
+        <div class="checkbox-group" id="edit-days">
+          <label class="checkbox-item"><input type="checkbox" value="月"> 月</label>
+          <label class="checkbox-item"><input type="checkbox" value="火"> 火</label>
+          <label class="checkbox-item"><input type="checkbox" value="水"> 水</label>
+          <label class="checkbox-item"><input type="checkbox" value="木"> 木</label>
+          <label class="checkbox-item"><input type="checkbox" value="金"> 金</label>
+          <label class="checkbox-item"><input type="checkbox" value="土"> 土</label>
+          <label class="checkbox-item"><input type="checkbox" value="日"> 日</label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">出勤可能時間帯</label>
+        <div class="checkbox-group" id="edit-slots">
+          <label class="checkbox-item"><input type="checkbox" value="早番"> 早番</label>
+          <label class="checkbox-item"><input type="checkbox" value="遅番"> 遅番</label>
+          <label class="checkbox-item"><input type="checkbox" value="通し"> 通し</label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">備考</label>
+        <input type="text" class="form-input" id="edit-note" placeholder="例: フォークリフト資格">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeStaffModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveStaff()">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="screen-label" id="screen-label">DEMO: ダッシュボード</div>
+
+<script>
+/* ===== Sample Data ===== */
+const staffData = [
+  { id:'s1', name:'田中太郎',   skillLevel:4, availableDays:['月','火','水','木','金'], availableSlots:['早番','遅番'], hourlyRate:1100, weight:1.5, note:'フォークリフト資格' },
+  { id:'s2', name:'鈴木花子',   skillLevel:3, availableDays:['月','水','金'],           availableSlots:['早番'],       hourlyRate:1050, weight:1.2, note:'' },
+  { id:'s3', name:'佐藤一郎',   skillLevel:5, availableDays:['火','水','木','金','土'], availableSlots:['早番','遅番','通し'], hourlyRate:1200, weight:2.0, note:'リーダー経験' },
+  { id:'s4', name:'高橋美咲',   skillLevel:2, availableDays:['月','火','木'],           availableSlots:['遅番'],       hourlyRate:1000, weight:0.8, note:'新人（研修中）' },
+  { id:'s5', name:'山本健太',   skillLevel:4, availableDays:['月','火','水','金','土'], availableSlots:['早番','通し'], hourlyRate:1100, weight:1.4, note:'' },
+  { id:'s6', name:'中村さくら', skillLevel:3, availableDays:['水','木','金','土'],       availableSlots:['早番','遅番'], hourlyRate:1050, weight:1.1, note:'土曜優先希望' },
+  { id:'s7', name:'小林大輔',   skillLevel:1, availableDays:['月','火','水'],           availableSlots:['早番'],       hourlyRate:1000, weight:0.5, note:'2月入社・新人' },
+  { id:'s8', name:'渡辺恵子',   skillLevel:4, availableDays:['火','木','土'],           availableSlots:['遅番','通し'], hourlyRate:1150, weight:1.6, note:'検品スペシャリスト' }
+];
+
+const shipmentLevels = {
+  '軽量': { minScore: 4,  desc: '出荷少なめ' },
+  '通常': { minScore: 8,  desc: '平均的な出荷量' },
+  '繁忙': { minScore: 12, desc: '出荷多め' },
+  '超繁忙': { minScore: 16, desc: '最大出荷' }
+};
+
+const dayNames = ['日','月','火','水','木','金','土'];
+let currentMonth = new Date();
+
+// Pre-generated calendar shift data
+const calendarShifts = {};
+
+/* ===== Navigation ===== */
+const screenLabels = {
+  dashboard: 'DEMO: ダッシュボード',
+  staff: 'DEMO: スタッフ一覧',
+  generate: 'DEMO: AIシフト生成',
+  calendar: 'DEMO: シフトカレンダー',
+  plans: 'DEMO: 導入プラン'
+};
+
+function switchPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  const el = document.getElementById('page-' + page);
+  if (el) el.classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(t => {
+    if (t.dataset.page === page) t.classList.add('active');
+  });
+  document.getElementById('screen-label').textContent = screenLabels[page] || 'DEMO';
+}
+
+document.querySelectorAll('.nav-tab').forEach(t => {
+  t.addEventListener('click', () => switchPage(t.dataset.page));
+});
+
+/* ===== Staff Rendering ===== */
+function renderStars(level) {
+  let html = '<span class="skill-stars">';
+  for (let i = 1; i <= 5; i++) {
+    html += '<span class="skill-star' + (i <= level ? ' filled' : '') + '">&#9733;</span>';
+  }
+  return html + '</span>';
+}
+
+function renderStaffGrid() {
+  const grid = document.getElementById('staff-grid');
+  grid.innerHTML = staffData.map(s => {
+    const dayBadges = s.availableDays.map(d => '<span class="badge badge-primary" style="font-size:11px;">' + d + '</span>').join('');
+    const slotBadges = s.availableSlots.map(sl => '<span class="badge badge-muted" style="font-size:11px;">' + sl + '</span>').join('');
+    return '<div class="staff-card" onclick="openStaffModal(\'' + s.id + '\')">' +
+      '<div class="staff-card-header">' +
+        '<div class="staff-avatar">' + s.name.charAt(0) + '</div>' +
+        '<div><div class="staff-name">' + s.name + '</div>' +
+        '<div class="staff-meta">' + renderStars(s.skillLevel) + ' Lv.' + s.skillLevel + '</div></div>' +
+      '</div>' +
+      '<div class="staff-badges">' + dayBadges + '</div>' +
+      '<div class="staff-badges">' + slotBadges + '</div>' +
+      '<div class="staff-rate">&#165;' + s.hourlyRate.toLocaleString() + '/時 &#12288;重み: ' + s.weight + '</div>' +
+      (s.note ? '<div class="staff-note">' + s.note + '</div>' : '') +
+    '</div>';
+  }).join('');
+  document.getElementById('stat-staff').textContent = staffData.length;
+}
+
+/* ===== Staff Modal ===== */
+function openStaffModal(id) {
+  const modal = document.getElementById('staff-modal');
+  if (id) {
+    const s = staffData.find(x => x.id === id);
+    if (!s) return;
+    document.getElementById('modal-title').textContent = 'スタッフ編集';
+    document.getElementById('edit-staff-id').value = s.id;
+    document.getElementById('edit-name').value = s.name;
+    document.getElementById('edit-skill').value = s.skillLevel;
+    document.getElementById('edit-rate').value = s.hourlyRate;
+    document.getElementById('edit-weight').value = s.weight;
+    document.getElementById('edit-note').value = s.note || '';
+    document.querySelectorAll('#edit-days input').forEach(cb => { cb.checked = s.availableDays.includes(cb.value); });
+    document.querySelectorAll('#edit-slots input').forEach(cb => { cb.checked = s.availableSlots.includes(cb.value); });
+  } else {
+    document.getElementById('modal-title').textContent = 'スタッフ追加';
+    document.getElementById('edit-staff-id').value = '';
+    document.getElementById('edit-name').value = '';
+    document.getElementById('edit-skill').value = 3;
+    document.getElementById('edit-rate').value = 1050;
+    document.getElementById('edit-weight').value = 1.0;
+    document.getElementById('edit-note').value = '';
+    document.querySelectorAll('#edit-days input').forEach(cb => { cb.checked = false; });
+    document.querySelectorAll('#edit-slots input').forEach(cb => { cb.checked = false; });
+  }
+  modal.classList.add('active');
+}
+
+function closeStaffModal() {
+  document.getElementById('staff-modal').classList.remove('active');
+}
+
+function saveStaff() {
+  const id = document.getElementById('edit-staff-id').value;
+  const name = document.getElementById('edit-name').value.trim();
+  if (!name) { alert('名前を入力してください'); return; }
+  const days = [];
+  document.querySelectorAll('#edit-days input:checked').forEach(cb => days.push(cb.value));
+  const slots = [];
+  document.querySelectorAll('#edit-slots input:checked').forEach(cb => slots.push(cb.value));
+  const obj = {
+    name: name,
+    skillLevel: parseInt(document.getElementById('edit-skill').value) || 3,
+    availableDays: days,
+    availableSlots: slots,
+    hourlyRate: parseInt(document.getElementById('edit-rate').value) || 1050,
+    weight: parseFloat(document.getElementById('edit-weight').value) || 1.0,
+    note: document.getElementById('edit-note').value.trim()
+  };
+  if (id) {
+    const idx = staffData.findIndex(x => x.id === id);
+    if (idx >= 0) Object.assign(staffData[idx], obj);
+  } else {
+    obj.id = 's' + (staffData.length + 1) + '_' + Date.now();
+    staffData.push(obj);
+  }
+  closeStaffModal();
+  renderStaffGrid();
+  updateShiftInfo();
+}
+
+/* ===== Shift Generation ===== */
+let selectedSlot = '早番';
+let selectedLevel = '通常';
+
+function selectSlot(el) {
+  document.querySelectorAll('.slot-toggle').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  selectedSlot = el.dataset.slot;
+  updateShiftInfo();
+}
+
+function selectLevel(el) {
+  document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  selectedLevel = el.dataset.level;
+  document.getElementById('info-required-score').textContent = shipmentLevels[selectedLevel].minScore;
+  updateShiftInfo();
+}
+
+function getSelectedDate() {
+  const val = document.getElementById('shift-date').value;
+  return val ? new Date(val) : new Date();
+}
+
+function getDayName(date) {
+  return dayNames[date.getDay()];
+}
+
+function getAvailableStaff(date, slot) {
+  const day = getDayName(date);
+  return staffData.filter(s => s.availableDays.includes(day) && s.availableSlots.includes(slot));
+}
+
+function updateShiftInfo() {
+  const date = getSelectedDate();
+  const available = getAvailableStaff(date, selectedSlot);
+  document.getElementById('info-available-count').textContent = available.length + '名';
+}
+
+// Algorithm A: Efficiency (skill*weight descending)
+function algoEfficiency(available, minScore) {
+  const sorted = [...available].sort((a, b) => (b.skillLevel * b.weight) - (a.skillLevel * a.weight));
+  const selected = [];
+  let total = 0;
+  for (const s of sorted) {
+    if (total >= minScore) break;
+    selected.push(s);
+    total += s.skillLevel * s.weight;
+  }
+  return { staff: selected, totalScore: total, status: total >= minScore ? '充足' : '人員不足' };
+}
+
+// Algorithm B: Cost-minimum (hourly rate ascending)
+function algoCostMin(available, minScore) {
+  const sorted = [...available].sort((a, b) => a.hourlyRate - b.hourlyRate);
+  const selected = [];
+  let total = 0;
+  for (const s of sorted) {
+    if (total >= minScore) break;
+    selected.push(s);
+    total += s.skillLevel * s.weight;
+  }
+  return { staff: selected, totalScore: total, status: total >= minScore ? '充足' : '人員不足' };
+}
+
+// Algorithm C: Balanced (1 veteran + skill-diversified)
+function algoBalanced(available, minScore) {
+  const sorted = [...available].sort((a, b) => (b.skillLevel * b.weight) - (a.skillLevel * a.weight));
+  const selected = [];
+  let total = 0;
+  // Pick top veteran first
+  if (sorted.length > 0) {
+    selected.push(sorted[0]);
+    total += sorted[0].skillLevel * sorted[0].weight;
+  }
+  // Fill remaining by alternating high/low skill
+  const remaining = sorted.slice(1);
+  const low = remaining.filter(s => s.skillLevel <= 3);
+  const high = remaining.filter(s => s.skillLevel > 3);
+  let useHigh = false;
+  while (total < minScore && (low.length > 0 || high.length > 0)) {
+    const pool = useHigh ? (high.length > 0 ? high : low) : (low.length > 0 ? low : high);
+    if (pool.length === 0) break;
+    const pick = pool.shift();
+    selected.push(pick);
+    total += pick.skillLevel * pick.weight;
+    useHigh = !useHigh;
+  }
+  return { staff: selected, totalScore: total, status: total >= minScore ? '充足' : '人員不足' };
+}
+
+function calcCost(staff, slot) {
+  const hours = slot === '通し' ? 8 : 4;
+  return staff.reduce((sum, s) => sum + s.hourlyRate * hours, 0);
+}
+
+function generateShift() {
+  const btn = document.getElementById('btn-generate');
+  const results = document.getElementById('shift-results');
+  const date = getSelectedDate();
+  const minScore = shipmentLevels[selectedLevel].minScore;
+  const available = getAvailableStaff(date, selectedSlot);
+
+  // Pulse animation
+  btn.classList.add('animating');
+  btn.disabled = true;
+  setTimeout(() => btn.classList.remove('animating'), 600);
+
+  // Show analyzing
+  results.innerHTML = '<div class="analyzing-overlay active"><div class="analyzing-spinner"></div><div style="font-weight:600;">AIが最適シフトを分析中...</div></div>';
+
+  setTimeout(() => {
+    const resultA = algoEfficiency(available, minScore);
+    const resultB = algoCostMin(available, minScore);
+    const resultC = algoBalanced(available, minScore);
+    const costA = calcCost(resultA.staff, selectedSlot);
+    const costB = calcCost(resultB.staff, selectedSlot);
+    const costC = calcCost(resultC.staff, selectedSlot);
+
+    const dateStr = date.getFullYear() + '/' + (date.getMonth()+1) + '/' + date.getDate() + ' (' + getDayName(date) + ')';
+
+    results.innerHTML = buildResultHTML('A', '推奨案（効率重視）', resultA, costA, minScore, dateStr, true) +
+      '<div class="alt-results" style="opacity:0;transform:translateY(10px);transition:all 0.4s ease;">' +
+        '<button class="alt-toggle" onclick="toggleAlt(this)">代替案を表示（コスト最小・バランス重視）<span class="arrow">&#9660;</span></button>' +
+        '<div class="alt-content">' +
+          buildResultHTML('B', 'コスト最小案', resultB, costB, minScore, dateStr, false) +
+          buildResultHTML('C', 'バランス重視案', resultC, costC, minScore, dateStr, false) +
+        '</div>' +
+      '</div>';
+
+    // Stagger animations
+    setTimeout(() => {
+      // Score gauge fill
+      const gauge = results.querySelector('.score-gauge-fill');
+      if (gauge) {
+        const pct = Math.min((resultA.totalScore / minScore) * 100, 100);
+        gauge.style.width = pct + '%';
+        gauge.style.background = resultA.status === '充足' ? 'var(--color-success)' : 'var(--color-danger)';
+      }
+    }, 200);
+
+    // Staff chips appear one by one
+    const chips = results.querySelectorAll('.primary-result .result-staff-chip');
+    chips.forEach((chip, i) => {
+      setTimeout(() => chip.classList.add('visible'), 300 + i * 150);
+    });
+
+    // Status badge pop
+    setTimeout(() => {
+      const statusBadge = results.querySelector('.primary-result .status-pop');
+      if (statusBadge) statusBadge.classList.add('visible');
+    }, 300 + chips.length * 150 + 200);
+
+    // Cost fade in
+    setTimeout(() => {
+      const costEl = results.querySelector('.primary-result .result-cost');
+      if (costEl) { costEl.style.opacity = '0'; costEl.style.transition = 'opacity 0.4s ease'; setTimeout(() => costEl.style.opacity = '1', 50); }
+    }, 300 + chips.length * 150 + 400);
+
+    // Alt results slide in
+    setTimeout(() => {
+      const altResults = results.querySelector('.alt-results');
+      if (altResults) { altResults.style.opacity = '1'; altResults.style.transform = 'translateY(0)'; }
+    }, 300 + chips.length * 150 + 700);
+
+    btn.disabled = false;
+  }, 800);
+}
+
+function buildResultHTML(label, title, result, cost, minScore, dateStr, isPrimary) {
+  const pct = Math.min((result.totalScore / minScore) * 100, 100);
+  const statusClass = result.status === '充足' ? 'badge-success' : 'badge-danger';
+  const gaugeColor = result.status === '充足' ? 'var(--color-success)' : 'var(--color-danger)';
+  const targetPct = (minScore / (minScore * 1.5)) * 100;
+  const hours = selectedSlot === '通し' ? 8 : 4;
+
+  const staffChips = result.staff.map(s =>
+    '<div class="result-staff-chip' + (isPrimary ? '' : ' visible') + '">' +
+      '<span class="chip-avatar">' + s.name.charAt(0) + '</span>' +
+      '<span>' + s.name + '</span>' +
+      '<span style="font-size:11px;color:var(--color-on-surface-variant);">Lv.' + s.skillLevel + '</span>' +
+    '</div>'
+  ).join('');
+
+  return '<div class="result-card' + (isPrimary ? ' primary primary-result' : '') + '">' +
+    '<div class="result-card-header">' +
+      '<div class="result-card-title">' +
+        '<span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:var(--color-primary);color:#fff;font-size:12px;font-weight:700;">' + label + '</span> ' +
+        title +
+      '</div>' +
+      '<span class="badge ' + statusClass + ' status-pop' + (isPrimary ? '' : ' visible') + '">' + result.status + '</span>' +
+    '</div>' +
+    '<div class="result-card-body">' +
+      '<div style="font-size:12px;color:var(--color-on-surface-variant);margin-bottom:var(--space-3);">' + dateStr + ' / ' + selectedSlot + ' / ' + selectedLevel + '</div>' +
+      '<div class="result-score-section">' +
+        '<div style="display:flex;justify-content:space-between;margin-bottom:var(--space-1);font-size:13px;">' +
+          '<span>スコア: <strong>' + result.totalScore.toFixed(1) + '</strong> / ' + minScore + '</span>' +
+          '<span>' + result.staff.length + '名配置</span>' +
+        '</div>' +
+        '<div class="score-gauge-bg">' +
+          '<div class="score-gauge-fill" style="width:' + (isPrimary ? '0' : pct + '%') + ';background:' + gaugeColor + ';"></div>' +
+          '<div class="score-gauge-target" style="left:' + targetPct + '%;"></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="result-staff-grid">' + staffChips + '</div>' +
+      '<div class="result-cost">' +
+        '人件費概算（' + hours + '時間）: <strong>&#165;' + cost.toLocaleString() + '</strong>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+function toggleAlt(btn) {
+  btn.classList.toggle('open');
+  btn.nextElementSibling.classList.toggle('open');
+}
+
+/* ===== Calendar ===== */
+function generateCalendarData() {
+  const year = currentMonth.getFullYear();
+  const month = currentMonth.getMonth();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(year, month, d);
+    const key = formatDateKey(date);
+    const dayOfWeek = date.getDay();
+
+    if (dayOfWeek === 0) {
+      calendarShifts[key] = { status: '休み', people: 0, score: 0, level: '-' };
+      continue;
+    }
+
+    // Simulate shift data
+    const levels = ['軽量', '通常', '通常', '繁忙', '通常'];
+    const level = levels[d % levels.length];
+    const minScore = shipmentLevels[level].minScore;
+    const available = getAvailableStaff(date, '早番');
+    const result = algoEfficiency(available, minScore);
+
+    calendarShifts[key] = {
+      status: result.status === '充足' ? '確定' : (result.totalScore >= minScore * 0.7 ? '仮' : '人員不足'),
+      people: result.staff.length,
+      score: result.totalScore,
+      level: level,
+      staff: result.staff
+    };
+  }
+}
+
+function formatDateKey(date) {
+  return date.getFullYear() + '-' + String(date.getMonth()+1).padStart(2,'0') + '-' + String(date.getDate()).padStart(2,'0');
+}
+
+function renderCalendar() {
+  generateCalendarData();
+  const year = currentMonth.getFullYear();
+  const month = currentMonth.getMonth();
+  document.getElementById('calendar-month').textContent = year + '年 ' + (month+1) + '月';
+
+  const grid = document.getElementById('calendar-grid');
+  let html = '';
+
+  // Day headers
+  dayNames.forEach(d => { html += '<div class="calendar-day-header">' + d + '</div>'; });
+
+  // First day offset
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const prevMonthDays = new Date(year, month, 0).getDate();
+  const today = new Date();
+
+  // Previous month days
+  for (let i = firstDay - 1; i >= 0; i--) {
+    html += '<div class="calendar-day other-month"><div class="calendar-day-num">' + (prevMonthDays - i) + '</div></div>';
+  }
+
+  // Current month days
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(year, month, d);
+    const key = formatDateKey(date);
+    const shift = calendarShifts[key];
+    const isToday = date.toDateString() === today.toDateString();
+
+    let statusClass = 'cal-off';
+    let statusText = '休み';
+    if (shift) {
+      if (shift.status === '確定') { statusClass = 'cal-ok'; statusText = '充足'; }
+      else if (shift.status === '仮') { statusClass = 'cal-warn'; statusText = '不足気味'; }
+      else if (shift.status === '人員不足') { statusClass = 'cal-danger'; statusText = '人員不足'; }
+      else { statusClass = 'cal-off'; statusText = '休み'; }
+    }
+
+    html += '<div class="calendar-day' + (isToday ? ' today' : '') + '" onclick="showCalendarDetail(\'' + key + '\',' + d + ')">' +
+      '<div class="calendar-day-num">' + d + '</div>' +
+      '<div class="calendar-day-status ' + statusClass + '">' + statusText + '</div>' +
+      (shift && shift.people > 0 ? '<div class="calendar-day-people">' + shift.people + '名</div>' : '') +
+    '</div>';
+  }
+
+  // Next month days
+  const totalCells = firstDay + daysInMonth;
+  const remaining = (7 - totalCells % 7) % 7;
+  for (let i = 1; i <= remaining; i++) {
+    html += '<div class="calendar-day other-month"><div class="calendar-day-num">' + i + '</div></div>';
+  }
+
+  grid.innerHTML = html;
+
+  // Render mobile list
+  renderCalendarList(year, month, daysInMonth);
+}
+
+function renderCalendarList(year, month, daysInMonth) {
+  const list = document.getElementById('calendar-list');
+  let html = '';
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(year, month, d);
+    const key = formatDateKey(date);
+    const shift = calendarShifts[key];
+    const dayName = dayNames[date.getDay()];
+
+    let statusBadge = '<span class="badge badge-muted">休み</span>';
+    if (shift && shift.status === '確定') statusBadge = '<span class="badge badge-success">充足</span>';
+    else if (shift && shift.status === '仮') statusBadge = '<span class="badge badge-warning">不足気味</span>';
+    else if (shift && shift.status === '人員不足') statusBadge = '<span class="badge badge-danger">人員不足</span>';
+
+    html += '<div class="calendar-list-item" onclick="showCalendarDetail(\'' + key + '\',' + d + ')">' +
+      '<div class="calendar-list-date"><div class="day-num">' + d + '</div><div class="day-name">' + dayName + '</div></div>' +
+      '<div class="calendar-list-info">' +
+        '<div style="display:flex;align-items:center;gap:8px;">' + statusBadge +
+          (shift && shift.people > 0 ? '<span style="font-size:13px;">' + shift.people + '名 / ' + shift.level + '</span>' : '') +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  list.innerHTML = html;
+}
+
+function showCalendarDetail(key, day) {
+  const shift = calendarShifts[key];
+  const detail = document.getElementById('calendar-detail');
+  const year = currentMonth.getFullYear();
+  const month = currentMonth.getMonth() + 1;
+
+  document.getElementById('detail-date').textContent = year + '/' + month + '/' + day + ' のシフト詳細';
+
+  if (!shift || shift.status === '休み') {
+    document.getElementById('detail-body').innerHTML = '<p style="color:var(--color-on-surface-variant);">この日は休業日です。</p>';
+  } else {
+    let staffHTML = '';
+    if (shift.staff && shift.staff.length > 0) {
+      staffHTML = '<div style="margin-top:var(--space-3);"><strong>配置スタッフ:</strong></div>' +
+        '<div style="display:flex;flex-wrap:wrap;gap:var(--space-2);margin-top:var(--space-2);">' +
+        shift.staff.map(s => '<span class="badge badge-primary" style="padding:4px 12px;">' + s.name + ' (Lv.' + s.skillLevel + ')</span>').join('') +
+        '</div>';
+    }
+
+    document.getElementById('detail-body').innerHTML =
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);">' +
+        '<div><div class="stat-label">出荷レベル</div><div style="font-weight:600;font-size:16px;">' + shift.level + '</div></div>' +
+        '<div><div class="stat-label">ステータス</div><div><span class="badge ' + (shift.status === '確定' ? 'badge-success' : shift.status === '仮' ? 'badge-warning' : 'badge-danger') + '">' + shift.status + '</span></div></div>' +
+        '<div><div class="stat-label">配置人数</div><div style="font-weight:600;font-size:16px;">' + shift.people + '名</div></div>' +
+        '<div><div class="stat-label">スコア</div><div style="font-weight:600;font-size:16px;">' + shift.score.toFixed(1) + '</div></div>' +
+      '</div>' +
+      staffHTML;
+  }
+
+  detail.classList.add('active');
+}
+
+function changeMonth(delta) {
+  currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + delta, 1);
+  document.getElementById('calendar-detail').classList.remove('active');
+  renderCalendar();
+}
+
+/* ===== Dashboard Today Summary ===== */
+function renderTodaySummary() {
+  const today = new Date();
+  const available = getAvailableStaff(today, '早番');
+  const result = algoEfficiency(available, 8);
+
+  const list = document.getElementById('today-staff-list');
+  list.innerHTML = result.staff.map(s =>
+    '<span class="today-staff-chip"><span style="font-weight:600;">' + s.name + '</span> Lv.' + s.skillLevel + '</span>'
+  ).join('');
+
+  const pct = Math.min((result.totalScore / 8) * 100, 100);
+  document.getElementById('today-score-text').textContent = 'スコア: ' + result.totalScore.toFixed(1) + ' / 8';
+
+  const statusBadge = document.getElementById('today-status');
+  if (result.status === '充足') {
+    statusBadge.className = 'badge badge-success';
+    statusBadge.textContent = '充足';
+  } else {
+    statusBadge.className = 'badge badge-danger';
+    statusBadge.textContent = '人員不足';
+  }
+
+  // Animate score bar
+  setTimeout(() => {
+    const bar = document.getElementById('today-score-bar');
+    bar.style.width = pct + '%';
+    bar.style.background = result.status === '充足' ? 'var(--color-success)' : 'var(--color-danger)';
+  }, 300);
+}
+
+/* ===== Init ===== */
+function init() {
+  // Set default date to today
+  const today = new Date();
+  const dateStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+  document.getElementById('shift-date').value = dateStr;
+
+  renderStaffGrid();
+  updateShiftInfo();
+  renderCalendar();
+  renderTodaySummary();
+
+  // Update shift info when date changes
+  document.getElementById('shift-date').addEventListener('change', updateShiftInfo);
+}
+
+// Close modal on overlay click
+document.getElementById('staff-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeStaffModal();
+});
+
+// Keyboard support
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeStaffModal();
+});
+
+init();
+</script>
+</body>
+</html>
