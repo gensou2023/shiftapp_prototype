@@ -751,7 +751,7 @@ function buildResultHTML(label, title, result, cost, minScore, dateStr, isPrimar
       '<div class="result-cost">' +
         '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--space-2);">' +
           '<span>人件費概算（' + hours + '時間）: <strong>&#165;' + cost.toLocaleString() + '</strong></span>' +
-          '<div style="display:flex;gap:var(--space-2);">' +
+          '<div style="display:flex;flex-wrap:wrap;gap:var(--space-2);">' +
             (isPrimary ? '<button class="btn btn-sm btn-secondary" onclick="showDevPopup()"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 12h8M5 8v4M9 8v4M3 4l4-2 4 2v4H3V4z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg> Excel出力</button>' : '') +
             confirmBtn +
           '</div>' +

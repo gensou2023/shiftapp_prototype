@@ -440,7 +440,7 @@ body {
 @keyframes pulseAnim { to { transform: translate(-50%, -50%) scale(1); opacity: 0; } }
 
 /* ===== Shift Results ===== */
-.shift-results { min-height: 200px; }
+.shift-results { min-height: 200px; overflow: hidden; max-width: 100%; }
 .result-placeholder {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   padding: 60px var(--space-6); text-align: center;
@@ -451,6 +451,7 @@ body {
   background: #fff; border: 1px solid var(--border-default);
   border-radius: var(--radius-md); box-shadow: var(--shadow-sm);
   margin-bottom: var(--space-4); overflow: hidden;
+  max-width: 100%;
 }
 .result-card.primary { border-color: var(--color-primary); border-width: 2px; }
 .result-card-header {
@@ -459,7 +460,7 @@ body {
   border-bottom: 1px solid var(--border-muted);
 }
 .result-card-title { font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: var(--space-2); }
-.result-card-body { padding: var(--space-6); }
+.result-card-body { padding: var(--space-6); overflow: hidden; }
 .result-score-section { margin-bottom: var(--space-4); }
 .score-gauge-bg {
   height: 12px; background: var(--color-surface-container);
@@ -784,6 +785,11 @@ body {
   .level-buttons { gap: var(--space-1); }
   .level-btn { padding: var(--space-2) var(--space-2); }
   .level-btn .level-name { font-size: 14px; }
+  .result-card-header { padding: var(--space-3) var(--space-4); }
+  .result-card-body { padding: var(--space-4); }
+  .result-card-title { font-size: 14px; }
+  .result-cost { font-size: 12px; }
+  .result-cost strong { font-size: 14px; }
   .screen-label { bottom: 8px; left: 8px; font-size: 10px; padding: 4px 10px; opacity: 0.7; }
 }
 
@@ -802,6 +808,11 @@ body {
   .alert-feed { padding: var(--space-3); }
   .alert-feed-item { gap: var(--space-2); }
   .day-timeline-section { padding: var(--space-3); }
+  .result-card-body { padding: var(--space-3); }
+  .result-staff-chip { padding: var(--space-1) var(--space-2); font-size: 12px; }
+  .result-staff-chip .chip-avatar { width: 20px; height: 20px; font-size: 10px; }
+  .result-cost div[style*="display:flex"] { flex-wrap: wrap; }
+  .btn-generate { font-size: 14px; }
   .screen-label { display: none; }
 }
 
