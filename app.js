@@ -1359,7 +1359,6 @@ function updateDashboardKPIs(todaySlotResults) {
 function renderAlertFeed(slotResults) {
   var alerts = [];
   var today = new Date();
-  var dayNames = ['日','月','火','水','木','金','土'];
   var todayStr = (today.getMonth()+1) + '/' + today.getDate() + '(' + dayNames[today.getDay()] + ')';
 
   // Check each slot for understaffing
@@ -1454,8 +1453,6 @@ function goToShiftGenFromCalendar() {
     updateShiftInfo();
   }
 }
-
-/* showDevPopup is defined earlier — single unified version */
 
 /* ===== Settings ===== */
 const appSettings = { darkHeader: true, compactMode: false, defaultPage: 'dashboard', notifyShiftChange: true, notifyLaborWarning: true, notifyAbsence: true };
