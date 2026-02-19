@@ -783,8 +783,9 @@ body {
   .calendar-list { display: block; }
   .form-row { grid-template-columns: 1fr; }
   .shift-timeline { margin-left: -16px; margin-right: -16px; padding-left: 16px; }
-  .shift-gen-layout { gap: var(--space-4); }
-  .shift-input-panel .card { max-width: 100%; }
+  .shift-gen-layout { gap: var(--space-4); max-width: 100%; }
+  .shift-input-panel { max-width: 100%; overflow: hidden; }
+  .shift-input-panel .card { max-width: 100%; position: relative; }
   .card-header { padding: var(--space-3) var(--space-4); font-size: 15px; }
   .card-body { padding: var(--space-4); }
   .level-buttons { gap: var(--space-1); }
@@ -828,11 +829,14 @@ body {
   .today-staff-chip { font-size: 12px; padding: var(--space-1) var(--space-2); }
   .btn-dev-feature { font-size: 12px; padding: 8px 14px; }
   .btn-dev-feature::after { top: -6px; right: -4px; font-size: 8px; padding: 1px 5px; }
+  .level-buttons { grid-template-columns: 1fr 1fr; width: 100%; max-width: 100%; }
   .level-btn { padding: var(--space-2) var(--space-1); }
   .level-btn .level-name { font-size: 13px; }
   .level-btn .level-score { font-size: 11px; }
+  .card { max-width: 100%; overflow: hidden; }
   .card-body { padding: var(--space-3); }
   .card-header { padding: var(--space-3); font-size: 14px; }
+  .shift-input-panel .card { position: relative; }
   .result-card-body { padding: var(--space-3); }
   .result-staff-chip { padding: var(--space-1) var(--space-2); font-size: 12px; }
   .result-staff-chip .chip-avatar { width: 20px; height: 20px; font-size: 10px; }
