@@ -375,7 +375,7 @@ body {
 .form-group { margin-bottom: var(--space-4); }
 .form-label { display: block; font-size: 13px; font-weight: 600; margin-bottom: var(--space-1); }
 .form-input, .form-select {
-  width: 100%; padding: var(--space-2) var(--space-3);
+  width: 100%; max-width: 100%; padding: var(--space-2) var(--space-3);
   border: 1px solid var(--border-default); border-radius: var(--radius-sm);
   font-size: 14px; font-family: inherit;
   transition: var(--transition);
@@ -397,7 +397,15 @@ body {
 /* ===== Shift Generator ===== */
 .shift-gen-layout { display: grid; grid-template-columns: 380px minmax(0, 1fr); gap: var(--space-6); }
 .shift-input-panel .card { position: sticky; top: 0; }
-.shift-date-input { width: 100%; }
+.shift-date-input {
+  width: 100%; max-width: 100%;
+  -webkit-appearance: none; appearance: none;
+  background: var(--color-surface-container);
+  border: 1px solid var(--border-muted);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  font-size: 14px; text-align: center;
+}
 .slot-toggles { display: flex; gap: var(--space-2); margin-top: var(--space-2); }
 .slot-toggle {
   padding: var(--space-2) var(--space-4);
