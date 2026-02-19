@@ -1427,7 +1427,7 @@ function renderAlertFeed(slotResults) {
   var iconMap = { danger: '!', warn: '!', info: 'i', success: '&#10003;' };
   listEl.innerHTML = alerts.slice(0, 5).map(function(a) {
     var actionBtn = a.action === 'recruit'
-      ? ' <button class="btn btn-sm btn-dev-feature" onclick="showDevPopup()" style="margin-left:var(--space-2);padding:2px 10px;font-size:11px;">追加人員を募集</button>'
+      ? '<div style="margin-top:4px;"><button class="btn btn-sm btn-dev-feature" onclick="showDevPopup()" style="padding:2px 10px;font-size:11px;">追加人員を募集</button></div>'
       : '';
     return '<li class="alert-feed-item">' +
       '<span class="alert-icon ' + a.type + '">' + iconMap[a.type] + '</span>' +
