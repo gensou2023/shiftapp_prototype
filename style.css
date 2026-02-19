@@ -829,7 +829,7 @@ body {
   .today-staff-chip { font-size: 12px; padding: var(--space-1) var(--space-2); }
   .btn-dev-feature { font-size: 12px; padding: 8px 14px; }
   .btn-dev-feature::after { top: -6px; right: -4px; font-size: 8px; padding: 1px 5px; }
-  .level-buttons { grid-template-columns: 1fr 1fr; width: 100%; max-width: 100%; }
+  .level-buttons { grid-template-columns: 1fr; }
   .level-btn { padding: var(--space-2) var(--space-1); }
   .level-btn .level-name { font-size: 13px; }
   .level-btn .level-score { font-size: 11px; }
