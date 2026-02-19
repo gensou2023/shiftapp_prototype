@@ -257,9 +257,24 @@ function filterDept(el) {
   renderStaffGrid();
 }
 
+let staffSearchQuery = '';
+
+function searchStaff() {
+  var input = document.getElementById('staff-search');
+  staffSearchQuery = input ? input.value.trim().toLowerCase() : '';
+  renderStaffGrid();
+}
+
 function getFilteredStaff() {
-  if (currentDeptFilter === 'all') return staffData;
-  return staffData.filter(s => s.dept === currentDeptFilter);
+  var list = currentDeptFilter === 'all' ? staffData : staffData.filter(function(s) { return s.dept === currentDeptFilter; });
+  if (staffSearchQuery) {
+    list = list.filter(function(s) {
+      return s.name.toLowerCase().indexOf(staffSearchQuery) !== -1 ||
+             s.dept.toLowerCase().indexOf(staffSearchQuery) !== -1 ||
+             (s.note && s.note.toLowerCase().indexOf(staffSearchQuery) !== -1);
+    });
+  }
+  return list;
 }
 
 function updateDeptCounts() {
@@ -1129,7 +1144,13 @@ function showCalendarDetail(key, day) {
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth() + 1;
 
+  calendarDetailDateKey = year + '-' + String(month).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+
   document.getElementById('detail-date').textContent = year + '/' + month + '/' + day + ' のシフト詳細';
+
+  // Show "go to shift gen" button
+  var genBtn = document.getElementById('detail-gen-btn');
+  if (genBtn) genBtn.style.display = 'inline-flex';
 
   if (!shift || shift.status === '休み') {
     document.getElementById('detail-body').innerHTML = '<p style="color:var(--color-on-surface-variant);">この日は休業日です。</p>';
@@ -1142,6 +1163,10 @@ function showCalendarDetail(key, day) {
         '</div>';
     }
 
+    var recruitBtn = shift.status === '人員不足'
+      ? '<div style="margin-top:var(--space-4);"><button class="btn btn-sm btn-dev-feature" onclick="showDevPopup()" style="font-size:12px;">追加人員を募集</button></div>'
+      : '';
+
     document.getElementById('detail-body').innerHTML =
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);">' +
         '<div><div class="stat-label">出荷レベル</div><div style="font-weight:600;font-size:16px;">' + shift.level + '</div></div>' +
@@ -1149,7 +1174,7 @@ function showCalendarDetail(key, day) {
         '<div><div class="stat-label">配置人数</div><div style="font-weight:600;font-size:16px;">' + shift.people + '名</div></div>' +
         '<div><div class="stat-label">スコア</div><div style="font-weight:600;font-size:16px;">' + shift.score.toFixed(1) + '</div></div>' +
       '</div>' +
-      staffHTML;
+      staffHTML + recruitBtn;
   }
 
   detail.classList.add('active');
@@ -1273,6 +1298,127 @@ function renderTodaySummary() {
   });
 
   timelineEl.innerHTML = hoursHTML + '<div style="position:relative;">' + nowHTML + rowsHTML + '</div>';
+
+  // Render alert feed
+  renderAlertFeed(slotResults);
+}
+
+/* ===== Dashboard: Alert Feed ===== */
+function renderAlertFeed(slotResults) {
+  var alerts = [];
+  var today = new Date();
+  var dayNames = ['日','月','火','水','木','金','土'];
+  var todayStr = (today.getMonth()+1) + '/' + today.getDate() + '(' + dayNames[today.getDay()] + ')';
+
+  // Check each slot for understaffing
+  slotResults.forEach(function(sr) {
+    if (sr.result.status === '人員不足') {
+      alerts.push({
+        type: 'danger',
+        text: '本日 ' + todayStr + ' ' + sr.name + ' が<strong>人員不足</strong>です（スコア: ' + sr.result.totalScore.toFixed(1) + '/40）',
+        time: '今日',
+        action: 'recruit'
+      });
+    }
+  });
+
+  // Check tomorrow
+  var tmr = new Date(today); tmr.setDate(tmr.getDate() + 1);
+  var tmrStr = (tmr.getMonth()+1) + '/' + tmr.getDate() + '(' + dayNames[tmr.getDay()] + ')';
+  ['早番','遅番','夜勤'].forEach(function(slot) {
+    var available = getAvailableStaff(tmr, slot);
+    var result = algoEfficiency(available, 40);
+    if (result.status === '人員不足') {
+      alerts.push({
+        type: 'warn',
+        text: '明日 ' + tmrStr + ' ' + slot + ' が人員不足の見込み（' + result.staff.length + '名 / スコア: ' + result.totalScore.toFixed(1) + '）',
+        time: '明日'
+      });
+    }
+  });
+
+  // Labor risk alerts (6+ day workers)
+  var weekdayCount = {};
+  staffData.forEach(function(s) {
+    if (s.availableDays.length >= 6) {
+      if (!weekdayCount.labor) weekdayCount.labor = [];
+      weekdayCount.labor.push(s.name);
+    }
+  });
+  if (weekdayCount.labor && weekdayCount.labor.length > 0) {
+    var names = weekdayCount.labor.slice(0, 2).join('、');
+    var more = weekdayCount.labor.length > 2 ? ' 他' + (weekdayCount.labor.length - 2) + '名' : '';
+    alerts.push({
+      type: 'warn',
+      text: names + more + ' — 週6日以上の出勤登録（連勤注意）',
+      time: '常時'
+    });
+  }
+
+  // Shift confirmed today
+  alerts.push({
+    type: 'success',
+    text: todayStr + ' 早番のシフトが確定済みです',
+    time: '8:00'
+  });
+
+  // Info
+  alerts.push({
+    type: 'info',
+    text: 'スタッフ登録数が <strong>' + staffData.length + '名</strong> になりました',
+    time: '最新'
+  });
+
+  var listEl = document.getElementById('alert-feed-list');
+  if (!listEl) return;
+  var iconMap = { danger: '!', warn: '!', info: 'i', success: '&#10003;' };
+  listEl.innerHTML = alerts.slice(0, 5).map(function(a) {
+    var actionBtn = a.action === 'recruit'
+      ? ' <button class="btn btn-sm btn-dev-feature" onclick="showDevPopup()" style="margin-left:var(--space-2);padding:2px 10px;font-size:11px;">追加人員を募集</button>'
+      : '';
+    return '<li class="alert-feed-item">' +
+      '<span class="alert-icon ' + a.type + '">' + iconMap[a.type] + '</span>' +
+      '<span class="alert-feed-text">' + a.text + actionBtn + '</span>' +
+      '<span class="alert-feed-time">' + a.time + '</span>' +
+    '</li>';
+  }).join('');
+}
+
+/* ===== Calendar → Shift Gen Link ===== */
+var calendarDetailDateKey = '';
+
+function goToShiftGenFromCalendar() {
+  if (!calendarDetailDateKey) return;
+  var parts = calendarDetailDateKey.split('-');
+  var y = parseInt(parts[0]), m = parseInt(parts[1]) - 1, d = parseInt(parts[2]);
+  var dateObj = new Date(y, m, d);
+  switchPage('generate');
+  // Set the date in the shift generator
+  var dateInput = document.getElementById('shift-date');
+  if (dateInput) {
+    dateInput.value = calendarDetailDateKey;
+    updateShiftInfo();
+  }
+}
+
+/* ===== Dev Feature Popup (for placeholder features) ===== */
+function showDevPopup() {
+  // Remove existing popup if any
+  var existing = document.querySelector('.dev-popup-overlay');
+  if (existing) existing.remove();
+  var existingPopup = document.querySelector('.dev-popup');
+  if (existingPopup) existingPopup.remove();
+
+  var overlay = document.createElement('div');
+  overlay.className = 'dev-popup-overlay';
+  var popup = document.createElement('div');
+  popup.className = 'dev-popup';
+  popup.innerHTML = '<div style="font-weight:600;margin-bottom:var(--space-3);">開発中の機能</div>' +
+    '<p style="font-size:13px;line-height:1.7;margin-bottom:var(--space-4);">この機能は現在開発中です。正式版では人員不足時に外部求人サービスとの連携や、登録済みスタッフへのシフト打診通知を行えるようになります。</p>' +
+    '<button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="closeDevPopup()">閉じる</button>';
+  document.body.appendChild(overlay);
+  document.body.appendChild(popup);
+  overlay.addEventListener('click', closeDevPopup);
 }
 
 /* ===== Settings ===== */

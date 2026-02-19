@@ -42,6 +42,11 @@
     <h1 class="page-title">ダッシュボード</h1>
     <p class="page-subtitle">シフト管理の概要</p>
 
+    <div class="sample-banner">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3M8 10v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      このデモアプリに表示されている氏名・所属等は、すべて架空のサンプルデータです。実在の人物とは一切関係ありません。
+    </div>
+
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-label">登録スタッフ</div>
@@ -50,8 +55,8 @@
       </div>
       <div class="stat-card">
         <div class="stat-label">今週のシフト</div>
-        <div class="stat-value">156</div>
-        <div class="stat-sub">充足率 92%</div>
+        <div class="stat-value" id="stat-weekly-shifts">156</div>
+        <div class="stat-sub" id="stat-weekly-coverage">充足率 92%</div>
       </div>
       <div class="stat-card">
         <div class="stat-label">本日の出荷レベル</div>
@@ -80,6 +85,15 @@
       <div id="day-timeline" class="timeline-container"></div>
     </div>
 
+    <!-- Alert Feed -->
+    <div class="alert-feed">
+      <div class="alert-feed-title">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1.5l6.5 11.5H1.5L8 1.5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 6.5v3M8 11v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        直近の通知
+      </div>
+      <ul class="alert-feed-list" id="alert-feed-list"></ul>
+    </div>
+
     <!-- 3-Slot Summaries -->
     <div class="slot-summaries" id="slot-summaries"></div>
   </div>
@@ -100,6 +114,10 @@
       </button>
     </div>
     <p class="page-subtitle">登録されているスタッフの情報を管理します</p>
+    <div class="staff-search">
+      <svg class="staff-search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M11 11l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <input type="text" class="staff-search-input" id="staff-search" placeholder="スタッフ名・部署で検索..." oninput="searchStaff()">
+    </div>
     <div class="dept-filters" id="dept-filters">
       <button class="dept-filter active" data-dept="all" onclick="filterDept(this)">全て<span class="dept-count" id="count-all"></span></button>
       <button class="dept-filter" data-dept="出荷・検品" onclick="filterDept(this)">出荷・検品<span class="dept-count" id="count-a"></span></button>
@@ -225,7 +243,10 @@
       <div class="card">
         <div class="card-header">
           <span id="detail-date">-</span>
-          <button class="btn btn-sm btn-secondary" onclick="document.getElementById('calendar-detail').classList.remove('active')">閉じる</button>
+          <div style="display:flex;gap:var(--space-2);">
+            <button class="btn btn-sm btn-primary" id="detail-gen-btn" style="display:none;" onclick="goToShiftGenFromCalendar()">シフト生成</button>
+            <button class="btn btn-sm btn-secondary" onclick="document.getElementById('calendar-detail').classList.remove('active')">閉じる</button>
+          </div>
         </div>
         <div class="card-body" id="detail-body"></div>
       </div>
