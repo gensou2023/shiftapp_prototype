@@ -496,80 +496,66 @@ body {
 .calendar-list-date .day-name { font-size: 11px; color: var(--color-on-surface-variant); }
 .calendar-list-info { flex: 1; }
 
-/* ===== Plans ===== */
-.plans-grid {
-  display: grid; grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-6); margin-bottom: var(--space-8);
+/* ===== Shift Timeline (Gantt) ===== */
+.shift-timeline {
+  margin: var(--space-4) 0; padding: var(--space-3) 0;
+  border-top: 1px solid var(--border-muted);
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
 }
-.plan-card {
-  background: #fff; border: 2px solid var(--border-default);
-  border-radius: var(--radius-lg); padding: var(--space-8) var(--space-6);
-  position: relative; transition: var(--transition); text-align: center;
+.timeline-inner { min-width: 500px; }
+.timeline-axis {
+  display: flex; padding-left: 90px; margin-bottom: var(--space-1);
+  font-size: 11px; color: var(--color-on-surface-variant); position: relative; height: 18px;
 }
-.plan-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
-.plan-card.highlight {
-  border-color: var(--color-primary); box-shadow: var(--shadow-md);
-  transform: scale(1.03);
+.timeline-axis span {
+  position: absolute; transform: translateX(-50%); white-space: nowrap;
 }
-.plan-card.highlight:hover { transform: scale(1.05); }
-.plan-badge-top {
-  position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
-  padding: var(--space-1) var(--space-4); border-radius: var(--radius-full);
-  font-size: 12px; font-weight: 600; white-space: nowrap;
+.timeline-row {
+  display: flex; align-items: center; height: 28px; margin-bottom: 2px;
 }
-.plan-badge-recommend { background: var(--color-primary); color: #fff; }
-.plan-badge-demo { background: var(--color-success); color: #fff; }
-.plan-icon { font-size: 40px; margin-bottom: var(--space-3); }
-.plan-name { font-size: 22px; font-weight: 700; margin-bottom: var(--space-1); }
-.plan-subtitle { font-size: 13px; color: var(--color-on-surface-variant); margin-bottom: var(--space-4); }
-.plan-features { text-align: left; margin-bottom: var(--space-6); }
-.plan-feature {
-  padding: var(--space-2) 0; font-size: 14px;
-  display: flex; align-items: flex-start; gap: var(--space-2);
-  border-bottom: 1px solid var(--border-muted);
+.timeline-label {
+  width: 85px; flex-shrink: 0; font-size: 12px; font-weight: 500;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  padding-right: var(--space-2);
 }
-.plan-feature:last-child { border-bottom: none; }
-.plan-check { flex-shrink: 0; font-size: 14px; }
-.plan-check.yes { color: var(--color-success); }
-.plan-check.no { color: var(--color-on-surface-variant); opacity: 0.4; }
+.timeline-track {
+  flex: 1; position: relative; height: 20px;
+  background: var(--color-surface-container); border-radius: var(--radius-sm);
+}
+.timeline-bar {
+  position: absolute; top: 2px; bottom: 2px; border-radius: 3px;
+  opacity: 0; transform: scaleX(0); transform-origin: left center;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer; min-width: 4px;
+}
+.timeline-bar.visible { opacity: 1; transform: scaleX(1); }
+.timeline-bar[data-dept="出荷・検品"]  { background: #93bbfc; }
+.timeline-bar[data-dept="入荷・仕分け"] { background: #fcd98e; }
+.timeline-bar[data-dept="物流・加工"]   { background: #86efac; }
+.timeline-bar[data-dept="夜間作業"]     { background: #c4b5fd; }
+.timeline-bar-tooltip {
+  display: none; position: absolute; bottom: calc(100% + 4px); left: 50%;
+  transform: translateX(-50%); padding: 4px 8px; background: #1a1a2e;
+  color: #fff; font-size: 11px; border-radius: var(--radius-sm);
+  white-space: nowrap; z-index: 10; pointer-events: none;
+}
+.timeline-bar:hover .timeline-bar-tooltip { display: block; }
+.timeline-section-title {
+  font-size: 12px; font-weight: 600; color: var(--color-on-surface-variant);
+  margin-bottom: var(--space-2); display: flex; align-items: center; gap: var(--space-2);
+}
 
-/* Plan Comparison Table */
-.plan-compare {
-  margin-bottom: var(--space-8);
+/* ===== Dev Popup ===== */
+.dev-popup {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  background: #fff; border-radius: var(--radius-lg); padding: var(--space-8);
+  box-shadow: var(--shadow-lg); z-index: 300; text-align: center;
+  max-width: 360px; width: 90%; animation: modalIn 0.3s ease;
 }
-.plan-compare table {
-  width: 100%; border-collapse: collapse;
-  background: #fff; border-radius: var(--radius-md);
-  overflow: hidden; box-shadow: var(--shadow-sm);
+.dev-popup-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.4); z-index: 299;
 }
-.plan-compare th, .plan-compare td {
-  padding: var(--space-3) var(--space-4);
-  text-align: center; border-bottom: 1px solid var(--border-muted);
-  font-size: 14px;
-}
-.plan-compare th { background: var(--color-surface-container); font-weight: 600; }
-.plan-compare td:first-child { text-align: left; font-weight: 500; }
-.plan-compare .highlight-col { background: rgba(26,115,232,0.04); }
-
-/* Step Flow */
-.step-flow {
-  display: flex; align-items: center; justify-content: center;
-  gap: var(--space-4); flex-wrap: wrap;
-}
-.step-item {
-  display: flex; align-items: center; gap: var(--space-3);
-  padding: var(--space-4) var(--space-6);
-  background: #fff; border: 1px solid var(--border-default);
-  border-radius: var(--radius-md);
-  font-size: 14px;
-}
-.step-num {
-  width: 28px; height: 28px; border-radius: 50%;
-  background: var(--color-primary); color: #fff;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 13px; font-weight: 700; flex-shrink: 0;
-}
-.step-arrow { color: var(--color-on-surface-variant); font-size: 20px; }
 
 /* ===== Screen Label ===== */
 .screen-label {
@@ -583,9 +569,6 @@ body {
 /* ===== Responsive ===== */
 @media (max-width: 1024px) {
   .shift-gen-layout { grid-template-columns: 1fr; }
-  .plans-grid { grid-template-columns: 1fr; max-width: 400px; margin-left: auto; margin-right: auto; }
-  .plan-card.highlight { transform: none; }
-  .plan-card.highlight:hover { transform: translateY(-2px); }
 }
 
 @media (max-width: 768px) {
@@ -600,10 +583,8 @@ body {
   .staff-grid { grid-template-columns: 1fr; }
   .calendar-grid-wrapper { display: none; }
   .calendar-list { display: block; }
-  .step-flow { flex-direction: column; }
-  .step-arrow { transform: rotate(90deg); }
   .form-row { grid-template-columns: 1fr; }
-  .plan-compare { overflow-x: auto; }
+  .shift-timeline { margin-left: -16px; margin-right: -16px; padding-left: 16px; }
 }
 
 @media (max-width: 480px) {
@@ -670,10 +651,9 @@ body {
     <div class="nav-tab" data-page="staff">スタッフ一覧</div>
     <div class="nav-tab" data-page="generate">シフト生成</div>
     <div class="nav-tab" data-page="calendar">カレンダー</div>
-    <div class="nav-tab" data-page="plans">プラン提示</div>
   </div>
   <div class="nav-spacer"></div>
-  <div class="nav-user"><div class="nav-avatar">置</div>クライアント</div>
+  <div class="nav-user"><div class="nav-avatar">村</div>村田さん</div>
 </nav>
 
 <!-- ===== Dashboard ===== -->
@@ -868,105 +848,6 @@ body {
   </div>
 </div>
 
-<!-- ===== Plans ===== -->
-<div class="page" id="page-plans">
-  <div class="page-inner">
-    <h1 class="page-title" style="text-align:center;">導入プラン</h1>
-    <p class="page-subtitle" style="text-align:center;">ご予算と規模に応じて最適なプランをお選びいただけます</p>
-
-    <div class="plans-grid">
-      <!-- Ume -->
-      <div class="plan-card">
-        <div class="plan-icon">&#127807;</div>
-        <div class="plan-name">梅プラン</div>
-        <div class="plan-subtitle">エージェント型（ローコスト）</div>
-        <div class="plan-features">
-          <div class="plan-feature"><span class="plan-check yes">&#10003;</span> スタッフ管理（スプレッドシート）</div>
-          <div class="plan-feature"><span class="plan-check yes">&#10003;</span> 基本シフト自動生成</div>
-          <div class="plan-feature"><span class="plan-check no">&#10005;</span> カレンダー表示</div>
-          <div class="plan-feature"><span class="plan-check no">&#10005;</span> 過去データ学習</div>
-          <div class="plan-feature"><span class="plan-check yes">&#10003;</span> Excel出力</div>
-          <div class="plan-feature"><span class="plan-check no">&#10005;</span> 予測・レポート</div>
-        </div>
-        <div style="font-size:13px;color:var(--color-on-surface-variant);margin-bottom:var(--space-3);">初期コスト: 低 ／ 月額: ほぼ0円</div>
-        <button class="btn btn-secondary" style="width:100%;justify-content:center;">詳細を見る</button>
-      </div>
-
-      <!-- Take -->
-      <div class="plan-card highlight">
-        <div class="plan-badge-top plan-badge-demo">このデモの本番版</div>
-        <div class="plan-icon">&#127812;</div>
-        <div class="plan-name">竹プラン</div>
-        <div class="plan-subtitle">Webアプリ基本版</div>
-        <div class="plan-features">
-          <div class="plan-feature"><span class="plan-check yes">&#10003;</span> スタッフ管理（専用UI）</div>
-          <div class="plan-feature"><span class="plan-check yes">&#10003;</span> シフト自動生成</div>
-          <div class="plan-feature"><span class="plan-check yes">&#10003;</span> カレンダー表示</div>
-          <div class="plan-feature"><span class="plan-check no">&#10005;</span> 過去データ学習</div>
-          <div class="plan-feature"><span class="plan-check yes">&#10003;</span> Excel出力</div>
-          <div class="plan-feature"><span class="plan-check no">&#10005;</span> 予測・レポート</div>
-        </div>
-        <div style="font-size:13px;color:var(--color-on-surface-variant);margin-bottom:var(--space-3);">初期コスト: 中 ／ 月額: 低</div>
-        <button class="btn btn-primary" style="width:100%;justify-content:center;">お問い合わせ</button>
-      </div>
-
-      <!-- Matsu -->
-      <div class="plan-card">
-        <div class="plan-badge-top plan-badge-recommend">おすすめ</div>
-        <div class="plan-icon">&#127795;</div>
-        <div class="plan-name">松プラン</div>
-        <div class="plan-subtitle">AI学習型フル機能版</div>
-        <div class="plan-features">
-          <div class="plan-feature"><span class="plan-check yes">&#10003;</span> スタッフ管理（専用UI）</div>
-          <div class="plan-feature"><span class="plan-check yes">&#10003;</span> 高度なシフト最適化</div>
-          <div class="plan-feature"><span class="plan-check yes">&#10003;</span> カレンダー表示</div>
-          <div class="plan-feature"><span class="plan-check yes">&#10003;</span> 過去データ学習</div>
-          <div class="plan-feature"><span class="plan-check yes">&#10003;</span> Excel出力</div>
-          <div class="plan-feature"><span class="plan-check yes">&#10003;</span> 予測・レポート・権限管理</div>
-        </div>
-        <div style="font-size:13px;color:var(--color-on-surface-variant);margin-bottom:var(--space-3);">初期コスト: 高 ／ 月額: 中</div>
-        <button class="btn btn-secondary" style="width:100%;justify-content:center;">詳細を見る</button>
-      </div>
-    </div>
-
-    <!-- Comparison Table -->
-    <div class="plan-compare">
-      <h2 style="font-size:18px;font-weight:700;margin-bottom:var(--space-4);text-align:center;">機能比較表</h2>
-      <table>
-        <thead>
-          <tr>
-            <th style="text-align:left;">機能</th>
-            <th>梅</th>
-            <th class="highlight-col">竹</th>
-            <th>松</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td>スタッフ管理</td><td>&#9651;</td><td class="highlight-col">&#9675;</td><td>&#9675;</td></tr>
-          <tr><td>シフト自動生成</td><td>&#9675;</td><td class="highlight-col">&#9675;</td><td>&#9675;（高度）</td></tr>
-          <tr><td>カレンダー表示</td><td>&#10005;</td><td class="highlight-col">&#9675;</td><td>&#9675;</td></tr>
-          <tr><td>スマホ対応</td><td>&#9651;</td><td class="highlight-col">&#9675;</td><td>&#9675;</td></tr>
-          <tr><td>Excel出力</td><td>&#9675;</td><td class="highlight-col">&#9675;</td><td>&#9675;</td></tr>
-          <tr><td>過去データ学習</td><td>&#10005;</td><td class="highlight-col">&#10005;</td><td>&#9675;</td></tr>
-          <tr><td>制約条件最適化</td><td>&#10005;</td><td class="highlight-col">&#9651;</td><td>&#9675;</td></tr>
-          <tr><td>予測・レポート</td><td>&#10005;</td><td class="highlight-col">&#10005;</td><td>&#9675;</td></tr>
-          <tr><td>権限管理</td><td>&#10005;</td><td class="highlight-col">&#10005;</td><td>&#9675;</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Step Flow -->
-    <h2 style="font-size:18px;font-weight:700;margin-bottom:var(--space-4);text-align:center;">おすすめの導入ステップ</h2>
-    <div class="step-flow">
-      <div class="step-item"><div class="step-num">1</div><div><strong>梅で検証</strong><br><span style="font-size:12px;color:var(--color-on-surface-variant);">業務フローを確認（1-2週間）</span></div></div>
-      <div class="step-arrow">&#8594;</div>
-      <div class="step-item"><div class="step-num">2</div><div><strong>竹でUI整備</strong><br><span style="font-size:12px;color:var(--color-on-surface-variant);">専用Webアプリ化</span></div></div>
-      <div class="step-arrow">&#8594;</div>
-      <div class="step-item"><div class="step-num">3</div><div><strong>松で本格運用</strong><br><span style="font-size:12px;color:var(--color-on-surface-variant);">AI学習・全機能展開</span></div></div>
-    </div>
-  </div>
-</div>
-
 <!-- ===== Staff Edit Modal ===== -->
 <div class="modal-overlay" id="staff-modal">
   <div class="modal">
@@ -1000,7 +881,7 @@ body {
         </div>
       </div>
       <div class="form-group">
-        <label class="form-label">重み（0.5-2.0）</label>
+        <label class="form-label">貢献度（0.5-2.0）</label>
         <input type="number" class="form-input" id="edit-weight" min="0.5" max="2.0" step="0.1" value="1.0">
       </div>
       <div class="form-group">
@@ -1164,8 +1045,7 @@ const screenLabels = {
   dashboard: 'DEMO: ダッシュボード',
   staff: 'DEMO: スタッフ一覧',
   generate: 'DEMO: AIシフト生成',
-  calendar: 'DEMO: シフトカレンダー',
-  plans: 'DEMO: 導入プラン'
+  calendar: 'DEMO: シフトカレンダー'
 };
 
 function switchPage(page) {
@@ -1230,7 +1110,7 @@ function renderStaffGrid() {
       '</div>' +
       '<div class="staff-badges">' + dayBadges + '</div>' +
       '<div class="staff-badges">' + slotBadges + '</div>' +
-      '<div class="staff-rate">&#165;' + s.hourlyRate.toLocaleString() + '/時 &#12288;重み: ' + s.weight + '</div>' +
+      '<div class="staff-rate">&#165;' + s.hourlyRate.toLocaleString() + '/時 &#12288;貢献度: ' + s.weight + '</div>' +
       (s.note ? '<div class="staff-note">' + s.note + '</div>' : '') +
     '</div>';
   }).join('');
@@ -1399,6 +1279,109 @@ function calcCost(staff, slot) {
   return staff.reduce((sum, s) => sum + s.hourlyRate * hours, 0);
 }
 
+/* ===== Staff Hours & Timeline ===== */
+function getStaffHours(staff, slot) {
+  const isFulltime = staff.availableDays.length >= 5;
+  const isFuyounai = (staff.note && staff.note.includes('扶養内')) || (staff.hourlyRate <= 1000 && staff.availableDays.length <= 3);
+  switch(slot) {
+    case '早番':
+      if (isFulltime && staff.skillLevel >= 4) return { start: 7.75, end: 16.75 };
+      if (isFulltime) return { start: 8, end: 17 };
+      if (isFuyounai) return { start: 9.5, end: 13.5 };
+      return { start: 9, end: 15 };
+    case '遅番':
+      if (isFuyounai) return { start: 17, end: 21 };
+      if (isFulltime) return { start: 15, end: 22 };
+      return { start: 17, end: 22 };
+    case '夜勤':
+      if (staff.weight >= 1.4) return { start: 22, end: 31 }; // 翌7:00
+      if (staff.weight >= 1.0) return { start: 22.5, end: 30.5 }; // 翌6:30
+      return { start: 23, end: 30 }; // 翌6:00
+    case '通し':
+      return { start: 8, end: 22 };
+    default:
+      return { start: 8, end: 17 };
+  }
+}
+
+function formatHour(h) {
+  const hour = Math.floor(h % 24);
+  const min = Math.round((h % 1) * 60);
+  return hour + ':' + String(min).padStart(2, '0');
+}
+
+function getTimelineRange(slot) {
+  switch(slot) {
+    case '早番': return { min: 6, max: 18 };
+    case '遅番': return { min: 14, max: 25 };
+    case '夜勤': return { min: 20, max: 32 };
+    case '通し': return { min: 6, max: 24 };
+    default: return { min: 6, max: 18 };
+  }
+}
+
+function buildTimelineHTML(staffList, slot) {
+  const range = getTimelineRange(slot);
+  const span = range.max - range.min;
+
+  // Build axis labels
+  let axisHTML = '';
+  for (let h = range.min; h <= range.max; h += 2) {
+    const pct = ((h - range.min) / span) * 100;
+    const label = h >= 24 ? formatHour(h - 24) : formatHour(h);
+    axisHTML += '<span style="left:' + pct + '%">' + label + '</span>';
+  }
+
+  // Build rows
+  let rowsHTML = '';
+  staffList.forEach(s => {
+    const hours = getStaffHours(s, slot);
+    const leftPct = Math.max(((hours.start - range.min) / span) * 100, 0);
+    const widthPct = Math.min(((hours.end - hours.start) / span) * 100, 100 - leftPct);
+    const startLabel = formatHour(hours.start);
+    const endLabel = hours.end >= 24 ? formatHour(hours.end - 24) : formatHour(hours.end);
+
+    rowsHTML += '<div class="timeline-row">' +
+      '<div class="timeline-label">' + s.name + '</div>' +
+      '<div class="timeline-track">' +
+        '<div class="timeline-bar" data-dept="' + s.dept + '" style="left:' + leftPct + '%;width:' + widthPct + '%;">' +
+          '<div class="timeline-bar-tooltip">' + s.name + ' ' + startLabel + '-' + endLabel + '</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  });
+
+  return '<div class="shift-timeline">' +
+    '<div class="timeline-section-title"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="3" width="12" height="8" rx="1" stroke="currentColor" stroke-width="1.2"/><path d="M1 6h12M4 3v8M8 3v8" stroke="currentColor" stroke-width="1" opacity="0.4"/></svg> タイムライン</div>' +
+    '<div class="timeline-inner">' +
+      '<div class="timeline-axis">' + axisHTML + '</div>' +
+      rowsHTML +
+    '</div>' +
+  '</div>';
+}
+
+/* ===== Dev Popup (Excel等) ===== */
+function showDevPopup() {
+  const overlay = document.createElement('div');
+  overlay.className = 'dev-popup-overlay';
+  const popup = document.createElement('div');
+  popup.className = 'dev-popup';
+  popup.innerHTML = '<div style="font-size:36px;margin-bottom:var(--space-3);">&#128679;</div>' +
+    '<div style="font-size:16px;font-weight:700;margin-bottom:var(--space-2);">開発中の機能です</div>' +
+    '<div style="font-size:13px;color:var(--color-on-surface-variant);margin-bottom:var(--space-6);">Excel出力機能は現在開発中のため、まだご利用いただけません。本番リリース時にご利用可能になります。</div>' +
+    '<button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="closeDevPopup()">閉じる</button>';
+  document.body.appendChild(overlay);
+  document.body.appendChild(popup);
+  overlay.addEventListener('click', closeDevPopup);
+}
+
+function closeDevPopup() {
+  const overlay = document.querySelector('.dev-popup-overlay');
+  const popup = document.querySelector('.dev-popup');
+  if (overlay) overlay.remove();
+  if (popup) popup.remove();
+}
+
 function generateShift() {
   const btn = document.getElementById('btn-generate');
   const results = document.getElementById('shift-results');
@@ -1450,23 +1433,31 @@ function generateShift() {
       setTimeout(() => chip.classList.add('visible'), 300 + i * 150);
     });
 
+    // Timeline bars animate in after chips
+    const bars = results.querySelectorAll('.primary-result .timeline-bar');
+    const chipsEnd = 300 + chips.length * 150;
+    bars.forEach((bar, i) => {
+      setTimeout(() => bar.classList.add('visible'), chipsEnd + i * 200);
+    });
+    const barsEnd = chipsEnd + bars.length * 200;
+
     // Status badge pop
     setTimeout(() => {
       const statusBadge = results.querySelector('.primary-result .status-pop');
       if (statusBadge) statusBadge.classList.add('visible');
-    }, 300 + chips.length * 150 + 200);
+    }, barsEnd + 200);
 
     // Cost fade in
     setTimeout(() => {
       const costEl = results.querySelector('.primary-result .result-cost');
       if (costEl) { costEl.style.opacity = '0'; costEl.style.transition = 'opacity 0.4s ease'; setTimeout(() => costEl.style.opacity = '1', 50); }
-    }, 300 + chips.length * 150 + 400);
+    }, barsEnd + 400);
 
     // Alt results slide in
     setTimeout(() => {
       const altResults = results.querySelector('.alt-results');
       if (altResults) { altResults.style.opacity = '1'; altResults.style.transform = 'translateY(0)'; }
-    }, 300 + chips.length * 150 + 700);
+    }, barsEnd + 700);
 
     btn.disabled = false;
   }, 800);
@@ -1508,8 +1499,12 @@ function buildResultHTML(label, title, result, cost, minScore, dateStr, isPrimar
         '</div>' +
       '</div>' +
       '<div class="result-staff-grid">' + staffChips + '</div>' +
+      (isPrimary ? buildTimelineHTML(result.staff, selectedSlot) : '') +
       '<div class="result-cost">' +
-        '人件費概算（' + hours + '時間）: <strong>&#165;' + cost.toLocaleString() + '</strong>' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--space-2);">' +
+          '<span>人件費概算（' + hours + '時間）: <strong>&#165;' + cost.toLocaleString() + '</strong></span>' +
+          (isPrimary ? '<button class="btn btn-sm btn-secondary" onclick="showDevPopup()"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 12h8M5 8v4M9 8v4M3 4l4-2 4 2v4H3V4z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg> Excel出力</button>' : '') +
+        '</div>' +
       '</div>' +
     '</div>' +
   '</div>';
